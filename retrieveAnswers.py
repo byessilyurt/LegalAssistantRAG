@@ -8,6 +8,7 @@ import pandas as pd
 import time
 from bs4 import BeautifulSoup
 import re
+from urllib.parse import urlparse
 
 def handle_cookie_popups(browser):
     """Handle various types of cookie consent popups."""
@@ -36,49 +37,43 @@ def handle_cookie_popups(browser):
         return False
 
 def get_search_results(browser, question, max_results=3):
-    """Get search results excluding PDFs and government sites."""
+    """Get search results, checking only for robot verification."""
     try:
-        # Exclude government sites and PDFs
-        exclude_sites = "-site:gov.pl -site:europa.eu -site:sejm.gov.pl -filetype:pdf"
-        query = f"{question} {exclude_sites}"
-        search_url = f"https://www.google.com/search?q={query}"
+        query = question.replace(" ", "+")
+        search_url = f"https://www.google.com/search?q={query}&hl=pl&lr=lang_pl"
         
         browser.get(search_url)
         time.sleep(3)
         
-        # Check for CAPTCHA/robot check
         if "consent.google.com" in browser.current_url or "sorry/index" in browser.current_url:
-            print("\n⚠️ Google verification required!")
-            print("Please complete the verification in the browser...")
-            print("Waiting 15 seconds...")
+            print("\n⚠️ Google verification required! Please complete the CAPTCHA. Waiting 15 seconds...")
             time.sleep(15)
         
-        # Get all result links
-        results = browser.find_elements(By.CSS_SELECTOR, "div.g a")
+        elements = browser.find_elements(By.CSS_SELECTOR, "div.g a")
         valid_urls = []
-        
-        for result in results:
-            url = result.get_attribute("href")
-            # Skip if URL contains PDF indicators
-            if url and not any(x in url.lower() for x in ['.pdf', '/pdf', 'pdf/', 'viewpdf']):
+        for elem in elements:
+            url = elem.get_attribute("href")
+            if url and is_valid_url(url):
                 valid_urls.append(url)
             if len(valid_urls) >= max_results:
                 break
                 
         return valid_urls
-        
     except Exception as e:
         print(f"Search error: {str(e)}")
         return []
 
-def extract_content(browser, url, question):
-    """Simplified content extraction focusing on relevance."""
+def extract_content(browser, url):
+    """Extract all relevant content from the page, limited to 15 paragraphs."""
     try:
         browser.get(url)
         time.sleep(3)
         
-        # Handle cookie popups
-        handle_cookie_popups(browser)
+        # Check if the page is trying to download a file
+        current_url = browser.current_url.lower()
+        if any(ext in current_url for ext in ['.pdf', '.doc', '.docx', '.rtf']):
+            print(f"Skipping URL {url} - detected document download")
+            return None
         
         # Get main content using BeautifulSoup
         soup = BeautifulSoup(browser.page_source, 'html.parser')
@@ -87,32 +82,61 @@ def extract_content(browser, url, question):
         for element in soup.find_all(['header', 'footer', 'nav', 'aside', 'script', 'style']):
             element.decompose()
         
-        # Find paragraphs with meaningful content
+        # Find all paragraphs with meaningful content
         paragraphs = []
         for element in soup.find_all(['p', 'li']):
             text = element.get_text().strip()
             # Only include longer paragraphs
             if len(text) > 100:
                 paragraphs.append(text)
+                # Break if we've reached 15 paragraphs
+                if len(paragraphs) >= 15:
+                    break
         
-        # Take up to 5 most relevant paragraphs
-        return '\n\n'.join(paragraphs[:5]) if paragraphs else None
+        return '\n\n'.join(paragraphs) if paragraphs else None
         
     except Exception as e:
         print(f"Extraction error: {str(e)}")
         return None
 
 def is_valid_url(url):
-    """Check if URL is valid (no PDFs or government sites)."""
-    lower_url = url.lower()
-    pdf_indicators = ['.pdf', '/pdf', 'pdf/', 'viewpdf']
-    gov_domains = ['gov.pl', 'europa.eu', 'sejm.gov.pl']
-    
-    if any(x in lower_url for x in pdf_indicators):
+    """Check if URL is valid by excluding PDFs, DOCs and forbidden domains."""
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        
+        hostname = hostname.lower()
+        
+        # Specific URL to block
+        if url.startswith('https://www.gov.pl/web/dolnoslaski-uw'):
+            return False
+            
+        # Block Google Translate URLs
+        if 'translate.google' in hostname or 'translate.goog' in hostname:
+            return False
+            
+        # Block forbidden domains and their subdomains
+        forbidden_domains = [
+            'gov.pl', 'europa.eu', 'sejm.gov.pl',
+            'pitax.pl', 'infor.pl', 'lex.pl'
+        ]
+        
+        for domain in forbidden_domains:
+            if hostname.endswith(domain) or f'.{domain}' in hostname:
+                print(f"Skipping forbidden domain: {hostname}")
+                return False
+                
+        # Check for document file extensions in URL
+        document_extensions = ['.pdf', '.doc', '.docx', '.rtf']
+        if any(url.lower().endswith(ext) for ext in document_extensions):
+            return False
+            
+        return True
+    except Exception as e:
+        print("URL validation error:", e)
         return False
-    if any(domain in lower_url for domain in gov_domains):
-        return False
-    return True
 
 if __name__ == "__main__":
     # Set up Chrome options to use your existing Chrome profile
@@ -137,26 +161,26 @@ if __name__ == "__main__":
         for question in questions:
             print(f"\nSearching for: {question}")
             
-            # Get search results
-            urls = get_search_results(browser, question)
+            urls = get_search_results(browser, question, max_results=3)
+            result_dict = {
+                'Question': question,
+                'Site1': '', 'Answer1': '',
+                'Site2': '', 'Answer2': '',
+                'Site3': '', 'Answer3': ''
+            }
             
-            # Try each URL until we find content
-            content = None
-            for url in urls:
+            for i, url in enumerate(urls, 1):
                 if not is_valid_url(url):
                     continue
-                print(f"Checking: {url}")
-                content = extract_content(browser, url, question)
+                print(f"Checking site {i}: {url}")
+                content = extract_content(browser, url)
                 if content:
-                    break
+                    result_dict[f'Site{i}'] = url
+                    result_dict[f'Answer{i}'] = content
             
-            results.append({
-                'Question': question,
-                'Answer': content if content else 'No relevant content found'
-            })
-            
+            results.append(result_dict)
             time.sleep(3)
-    
+            
     finally:
         browser.quit()
         
@@ -164,3 +188,5 @@ if __name__ == "__main__":
     results_df = pd.DataFrame(results)
     results_df.to_excel('legal_questions_answers.xlsx', index=False)
     print("Results saved to legal_questions_answers.xlsx")
+
+
