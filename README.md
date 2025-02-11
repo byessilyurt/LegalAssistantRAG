@@ -25,22 +25,16 @@ This project aims to make Polish legal information more accessible to foreigners
 - Source attribution for transparency
 
 ### Web Interface
-- React-based frontend for intuitive interaction
 - Real-time chat interface
-- Multi-language support
 - Mobile-responsive design
 
 ### AI Integration
 - AWS Transcribe for voice-to-text
-- AWS Rekognition for document processing
-- Gemini Pro for text generation
+- AWS Recognition for document processing
+- OpenAI for text generation
 - Custom embeddings for Polish legal context
 
 ### Cloud Deployment
-- Scalable cloud architecture
-- Load balancing and high availability
-- Secure data handling
-- API rate limiting and monitoring
 
 ## 🛠 Technology Stack
 
@@ -62,11 +56,6 @@ This project aims to make Polish legal information more accessible to foreigners
 - Custom RAG implementation
 - Sentence transformers
 
-### Infrastructure
-- AWS/GCP for hosting
-- Docker containers
-- CI/CD pipeline
-- SSL/TLS security
 
 ## 📋 Project Structure
 
@@ -105,16 +94,6 @@ The project currently has:
    - Implement security measures
    - Deploy production system
 
-## 🤝 Contributing
-
-Contributions are welcome! Please read our contributing guidelines and code of conduct before submitting pull requests.
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Polish legal resources and documentation
-- Open-source AI/ML community
-- Contributors and supporters
