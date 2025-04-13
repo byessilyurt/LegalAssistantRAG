@@ -113,12 +113,90 @@ def create_pdf(excel_file, pdf_file):
     # Build the PDF
     doc.build(content)
 
-if __name__ == "__main__":
-    excel_file = "legal_questions_answers.xlsx"
-    pdf_file = "legal_questions_answers.pdf"
+def translate_to_english(excel_file, output_file=None):
+    """
+    Translates the content of the Excel file from Polish to English using DeepL API
+    and saves as a new Excel file.
     
-    try:
-        create_pdf(excel_file, pdf_file)
-        print(f"Successfully created {pdf_file}")
-    except Exception as e:
-        print(f"Error creating PDF: {e}")
+    Args:
+        excel_file (str): Path to the Excel file containing Polish content
+        output_file (str, optional): Path for the output Excel file with English translations.
+            If None, appends '_english' to the original filename.
+    """
+    import os
+    import pandas as pd
+    import deepl
+    from dotenv import load_dotenv
+    
+    # Load API key from .env file
+    load_dotenv()
+    deepl_api_key = os.getenv('DEEPL_API_KEY')
+    
+    if not deepl_api_key:
+        raise ValueError("DeepL API key not found in .env file. Add DEEPL_API_KEY=your_key")
+    
+    # Create DeepL translator
+    translator = deepl.Translator(deepl_api_key)
+    
+    # Generate output file name if not provided
+    if output_file is None:
+        base, ext = os.path.splitext(excel_file)
+        output_file = f"{base}_english{ext}"
+    
+    print(f"Reading file: {excel_file}")
+    # Read Excel file
+    df = pd.read_excel(excel_file)
+    
+    # Translate each column with text content
+    text_columns = ['Question']
+    for i in range(1, 4):  # Process Answer1, Answer2, Answer3
+        text_columns.append(f'Answer{i}')
+    
+    # Create a new DataFrame for translated content
+    translated_df = df.copy()
+    
+    total_rows = len(df)
+    for col in text_columns:
+        print(f"Translating column: {col}")
+        for idx, text in enumerate(df[col]):
+            if pd.notna(text) and text.strip():  # Check if text exists and is not empty
+                print(f"  Row {idx+1}/{total_rows}", end="\r")
+                try:
+                    translated_text = translator.translate_text(
+                        text, 
+                        source_lang="PL", 
+                        target_lang="EN-US"
+                    ).text
+                    translated_df.at[idx, col] = translated_text
+                except Exception as e:
+                    print(f"  Error translating row {idx+1}, column {col}: {e}")
+    
+    # Save translated content to a new Excel file
+    translated_df.to_excel(output_file, index=False)
+    print(f"\nSuccessfully created {output_file}")
+    return output_file
+
+if __name__ == "__main__":
+    import sys
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "translate":
+        # Run translation
+        excel_file = "legal_questions_answers.xlsx"
+        output_file = "legal_questions_answers_english.xlsx"
+        
+        try:
+            translate_to_english(excel_file, output_file)
+        except ImportError:
+            print("Error: DeepL package is required. Install it with: pip install deepl")
+    else:
+        # Default behavior - create PDF
+        excel_file = "legal_questions_answers.xlsx"
+        pdf_file = "legal_questions_answers.pdf"
+        
+        try:
+            create_pdf(excel_file, pdf_file)
+            print(f"Successfully created {pdf_file}")
+        except Exception as e:
+            print(f"Error creating PDF: {e}")
+
+

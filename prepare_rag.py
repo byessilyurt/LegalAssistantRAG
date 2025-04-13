@@ -94,7 +94,7 @@ class LegalRAG:
         
         # Generate response using GPT-4
         response = self.client.chat.completions.create(
-            model="gpt-4-turbo-preview",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful legal assistant specializing in Polish law. Provide accurate, clear answers based on the given context."},
                 {"role": "user", "content": prompt}
