@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 # Add the query directory to the path so we can import from it
-sys.path.append(str(Path(__file__).parent.parent.parent / "RAG"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "query"))
 
 try:
     from prepare_rag import LegalRAG
