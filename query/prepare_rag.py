@@ -14,7 +14,9 @@ class LegalRAG:
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         
         # Load and prepare the data
-        self.df = pd.read_excel('legal_questions_answers.xlsx')
+        base_dir = os.path.dirname(os.path.abspath(__file__))  # gets directory of prepare_rag.py
+        file_path = os.path.join(base_dir, 'legal_questions_answers.xlsx')
+        self.df = pd.read_excel(file_path)
         self.documents = self.prepare_documents()
         self.embeddings = {}  # Cache for embeddings
         
