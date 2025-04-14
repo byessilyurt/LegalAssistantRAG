@@ -1,6 +1,6 @@
 from prepare_rag import LegalRAG
 
-def main():
+def query_rag():
     # Initialize the RAG system
     rag = LegalRAG()
     
@@ -26,4 +26,4 @@ def main():
         print("-" * 50)
 
 if __name__ == "__main__":
-    main()
+    query_rag()
