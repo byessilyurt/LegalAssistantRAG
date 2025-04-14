@@ -48,8 +48,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Polish Law for Foreigners</h1>
-        <p className="App-subtitle">Ask questions about Polish law in any language</p>
+        <h1>Legal Help PL</h1>
+        <p className="App-subtitle">Ask questions about Polish law as a foreigner</p>
       </header>
       
       <main className="App-main">
