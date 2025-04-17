@@ -1,9 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
+import { useAuthentication } from './auth/auth-hooks';
+import LoginButton from './components/LoginButton';
+import UserProfile from './components/UserProfile';
+import ProtectedRoute from './components/ProtectedRoute';
 
+// API URL - change this to your FastAPI server address
 const API_URL = 'http://localhost:8000';
 
 function App() {
+  const { isAuthenticated, isLoading, user } = useAuthentication();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -12,10 +18,12 @@ function App() {
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // Fetch conversations on initial load
+  // Fetch conversations on initial load and auth change
   useEffect(() => {
-    fetchConversations();
-  }, []);
+    if (isAuthenticated) {
+      fetchConversations();
+    }
+  }, [isAuthenticated]);
 
   // Scroll to bottom of messages when messages change
   useEffect(() => {
@@ -174,15 +182,21 @@ function App() {
     return [...new Set(urls)];
   };
 
-  return (
-    <div className="chat-app">
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <h2>Conversations</h2>
-          <button className="new-chat-btn" onClick={createNewConversation}>
-            + New Chat
-          </button>
+  // Render sidebar with auth condition
+  const renderSidebar = () => (
+    <aside className="sidebar">
+      <div className="sidebar-header">
+        <h2>Conversations</h2>
+        <div className="sidebar-actions">
+          {isAuthenticated ? (
+            <button className="new-chat-btn" onClick={createNewConversation}>
+              + New Chat
+            </button>
+          ) : null}
         </div>
+      </div>
+      
+      {isAuthenticated ? (
         <div className="conversation-list">
           {conversations.map(conv => (
             <div 
@@ -210,12 +224,32 @@ function App() {
             </div>
           ))}
         </div>
-      </aside>
+      ) : (
+        <div className="sidebar-auth-message">
+          <p>Sign in to save your conversations and access them later</p>
+        </div>
+      )}
+    </aside>
+  );
+
+  return (
+    <div className="chat-app">
+      {renderSidebar()}
       
       <main className="chat-main">
         <header className="chat-header">
           <h1>Polish Law for Foreigners</h1>
-          <p className="subtitle">Ask questions about Polish law</p>
+          <p className="subtitle">Ask questions about Polish law in any language</p>
+          
+          <div className="auth-controls">
+            {isLoading ? (
+              <div className="auth-loading-small">Loading...</div>
+            ) : isAuthenticated ? (
+              <UserProfile />
+            ) : (
+              <LoginButton />
+            )}
+          </div>
         </header>
         
         <div className="messages-container">
@@ -223,6 +257,12 @@ function App() {
             <div className="welcome-message">
               <h2>Welcome to Polish Law Assistant</h2>
               <p>How can I help you with Polish legal questions today?</p>
+              {!isAuthenticated && (
+                <div className="welcome-auth-prompt">
+                  <p>Sign in to save your conversations</p>
+                  <LoginButton />
+                </div>
+              )}
             </div>
           ) : (
             messages.map(msg => {

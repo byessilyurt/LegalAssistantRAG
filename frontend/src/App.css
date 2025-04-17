@@ -122,6 +122,7 @@
   text-align: center;
   padding: 16px;
   border-bottom: 1px solid #444654;
+  position: relative;
 }
 
 .chat-header h1 {
@@ -343,6 +344,45 @@
   cursor: not-allowed;
 }
 
+/* Header with authentication */
+.auth-controls {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.auth-loading-small {
+  color: #8e8ea0;
+  font-size: 12px;
+}
+
+/* Authentication in sidebar */
+.sidebar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sidebar-auth-message {
+  padding: 16px;
+  color: #8e8ea0;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Welcome message with auth prompt */
+.welcome-auth-prompt {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.welcome-auth-prompt p {
+  color: #8e8ea0;
+  font-size: 14px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .chat-app {
@@ -356,5 +396,14 @@
   
   .message {
     max-width: 95%;
+  }
+  
+  .auth-controls {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
   }
 }
