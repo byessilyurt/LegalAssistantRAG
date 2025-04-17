@@ -40,21 +40,13 @@ This project aims to make Polish legal information more accessible to foreigners
 
 ### Frontend
 - React.js
-- TypeScript
-- Material UI
-- WebSocket for real-time communication
 
 ### Backend
-- Node.js
-- Express
-- MongoDB
-- Python for AI/ML components
+- FastAPI
 
 ### AI/ML
 - AWS AI Services
-- Google's Gemini Pro
 - Custom RAG implementation
-- Sentence transformers
 
 
 ## 📋 Project Structure
@@ -64,8 +56,7 @@ This project aims to make Polish legal information more accessible to foreigners
 The project currently has:
 - Implemented web scraping with content filtering
 - Basic RAG system with Gemini Pro integration
-- Data processing and PDF generation
-- Initial data collection pipeline
+- Data processing and translation via api
 
 ## 🔜 Roadmap
 
@@ -77,23 +68,16 @@ The project currently has:
 2. **Phase 2: RAG System Enhancement**
    - Fine-tune embeddings for legal context
    - Implement better answer generation
-   - Add multi-language support
 
 3. **Phase 3: Web Interface**
    - Develop React frontend
-   - Create Node.js backend
-   - Implement real-time chat
+   - Create Python backend
 
 4. **Phase 4: AI Integration**
    - Add voice input/output
-   - Implement document processing
    - Enable image-based queries
 
 5. **Phase 5: Cloud Deployment**
    - Set up cloud infrastructure
-   - Implement security measures
    - Deploy production system
 
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
