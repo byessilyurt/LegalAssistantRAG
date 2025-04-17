@@ -31,7 +31,6 @@ app = FastAPI(
 
 # Register exception handlers for Auth0 errors
 app.add_exception_handler(jwt.exceptions.ExpiredSignatureError, AuthError.token_expired)
-app.add_exception_handler(jwt.exceptions.JWTClaimsError, AuthError.invalid_claims)
 app.add_exception_handler(jwt.exceptions.InvalidSignatureError, AuthError.invalid_signature)
 app.add_exception_handler(jwt.exceptions.InvalidTokenError, AuthError.invalid_token)
 app.add_exception_handler(VerifyTokenError, AuthError.invalid_token)
