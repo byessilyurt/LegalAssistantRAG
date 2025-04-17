@@ -1,15 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import './App.css';
-import LoginPage from './components/LoginPage';
-import LogoutButton from './components/LogoutButton';
-import UserProfile from './components/UserProfile';
 
-// API URL - change this to your FastAPI server address
 const API_URL = 'http://localhost:8000';
 
 function App() {
-  const { isAuthenticated, isLoading, user, getAccessTokenSilently } = useAuth0();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -18,29 +12,10 @@ function App() {
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // If still loading auth state or not authenticated, show login page
-  if (isLoading) {
-    return (
-      <div className="auth-loading-container">
-        <div className="auth-loading-spinner">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
-
   // Fetch conversations on initial load
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchConversations();
-    }
-  }, [isAuthenticated]);
+    fetchConversations();
+  }, []);
 
   // Scroll to bottom of messages when messages change
   useEffect(() => {
@@ -53,15 +28,7 @@ function App() {
 
   const fetchConversations = async () => {
     try {
-      // Get access token for API call
-      const token = await getAccessTokenSilently();
-      
-      const res = await fetch(`${API_URL}/api/conversations`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
+      const res = await fetch(`${API_URL}/api/conversations`);
       if (!res.ok) {
         throw new Error('Failed to fetch conversations');
       }
@@ -75,15 +42,7 @@ function App() {
 
   const selectConversation = async (conversationId) => {
     try {
-      // Get access token for API call
-      const token = await getAccessTokenSilently();
-      
-      const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
+      const res = await fetch(`${API_URL}/api/conversations/${conversationId}`);
       if (!res.ok) {
         throw new Error('Failed to fetch conversation');
       }
@@ -105,16 +64,9 @@ function App() {
 
   const deleteConversation = async (conversationId) => {
     try {
-      // Get access token for API call
-      const token = await getAccessTokenSilently();
-      
       const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
       });
-      
       if (!res.ok) {
         throw new Error('Failed to delete conversation');
       }
@@ -158,14 +110,10 @@ function App() {
     }
 
     try {
-      // Get access token for API call
-      const token = await getAccessTokenSilently();
-      
       const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload),
       });
@@ -230,10 +178,7 @@ function App() {
     <div className="chat-app">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <div className="user-section">
-            <UserProfile />
-            <LogoutButton />
-          </div>
+          <h2>Conversations</h2>
           <button className="new-chat-btn" onClick={createNewConversation}>
             + New Chat
           </button>
@@ -270,13 +215,13 @@ function App() {
       <main className="chat-main">
         <header className="chat-header">
           <h1>Polish Law for Foreigners</h1>
-          <p className="subtitle">Ask questions about Polish law in any language</p>
+          <p className="subtitle">Ask questions about Polish law</p>
         </header>
         
         <div className="messages-container">
           {messages.length === 0 ? (
             <div className="welcome-message">
-              <h2>Welcome, {user.name}!</h2>
+              <h2>Welcome to Polish Law Assistant</h2>
               <p>How can I help you with Polish legal questions today?</p>
             </div>
           ) : (
