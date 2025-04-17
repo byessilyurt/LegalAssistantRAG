@@ -4,6 +4,7 @@ A React-based frontend for the Polish Law for Foreigners application. This appli
 
 ## Features
 
+- **Single Sign-On Authentication**: Login with Google, GitHub, and other providers
 - **Source References**: Hover over the "Sources" label to see references for each answer
 - **Conversation History**: Keep track of past conversations in the sidebar
 - **Clean, Modern UI**: Easy to use interface for all users
