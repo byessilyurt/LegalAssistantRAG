@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { useAuthentication } from './auth/auth-hooks';
+import { useAuthentication, useAccessToken } from './auth/auth-hooks';
 import LoginButton from './components/LoginButton';
 import UserProfile from './components/UserProfile';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -9,6 +9,7 @@ const API_URL = 'http://localhost:8000';
 
 function App() {
   const { isAuthenticated, isLoading, user } = useAuthentication();
+  const { getToken } = useAccessToken();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +36,18 @@ function App() {
 
   const fetchConversations = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/conversations`);
+      // Get auth token if user is authenticated
+      const headers = {};
+      if (isAuthenticated) {
+        const token = await getToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
+      const res = await fetch(`${API_URL}/api/conversations`, {
+        headers
+      });
       if (!res.ok) {
         throw new Error('Failed to fetch conversations');
       }
@@ -49,7 +61,18 @@ function App() {
 
   const selectConversation = async (conversationId) => {
     try {
-      const res = await fetch(`${API_URL}/api/conversations/${conversationId}`);
+      // Get auth token if user is authenticated
+      const headers = {};
+      if (isAuthenticated) {
+        const token = await getToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
+      const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
+        headers
+      });
       if (!res.ok) {
         throw new Error('Failed to fetch conversation');
       }
@@ -71,8 +94,18 @@ function App() {
 
   const deleteConversation = async (conversationId) => {
     try {
+      // Get auth token if user is authenticated
+      const headers = {};
+      if (isAuthenticated) {
+        const token = await getToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
       const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
         method: 'DELETE',
+        headers
       });
       if (!res.ok) {
         throw new Error('Failed to delete conversation');
@@ -117,11 +150,21 @@ function App() {
     }
 
     try {
+      // Get auth token if user is authenticated
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (isAuthenticated) {
+        const token = await getToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
       const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(payload),
       });
       
