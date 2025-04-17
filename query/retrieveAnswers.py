@@ -20,16 +20,17 @@ def get_search_results(browser, question: str, max_results: int = 3) -> List[str
         search_url = f"https://www.google.com/search?q={query}&hl=pl&lr=lang_pl"
         
         browser.get(search_url)
-        print(f"Searching for: {question}")
+        print(f"Loaded search page URL: {browser.current_url}")
         
         # Wait for search results with increased timeout
         wait = WebDriverWait(browser, 15)
         try:
             wait.until(EC.presence_of_element_located((By.ID, "search")))
+            print("Search results container loaded")
         except:
-            print("Timeout waiting for search results, continuing anyway")
+            print("Timeout waiting for search results container, continuing anyway")
         
-        time.sleep(3)  # Reduced wait time
+        time.sleep(5)  # Additional wait time
         
         # Handle CAPTCHA
         if "consent.google.com" in browser.current_url or "sorry/index" in browser.current_url:
@@ -39,38 +40,73 @@ def get_search_results(browser, question: str, max_results: int = 3) -> List[str
         # Get page source and parse with BeautifulSoup
         soup = BeautifulSoup(browser.page_source, 'html.parser')
         
-        # Find all result links
-        valid_urls = []
-        result_links = soup.find_all('a', href=True)
+        # Try multiple selectors that might match Google result links
+        selectors = [
+            "a[href^='http']:not([href*='google.com']):not([href*='accounts.google']):not([href*='support.google'])",
+            "div.g a[href^='http']", 
+            "div.yuRUbf > a",
+            ".DhN8Cf a[href^='http']",
+            ".v5yQqb a[ping]",
+            ".tF2Cxc a",
+            "h3.LC20lb + div a",
+            ".kCrYT > a",
+            "#search a[href^='http']:not([href*='google'])",
+            "#rso a[href^='http']"
+        ]
         
-        for link in result_links:
-            url = link['href']
-            if url.startswith('http') and 'google' not in url:
-                if is_valid_url(url):
-                    # Check if the link text contains relevant keywords
-                    link_text = link.get_text().lower()
-                    keywords = ['prawo', 'ustawa', 'rozporządzenie', 'orzeczenie', 'wyrok', 'sąd', 'trybunał']
-                    if any(keyword in link_text for keyword in keywords):
+        valid_urls = []
+        for selector in selectors:
+            print(f"Trying selector: {selector}")
+            elements = browser.find_elements(By.CSS_SELECTOR, selector)
+            print(f"  Found {len(elements)} elements")
+            
+            for elem in elements:
+                try:
+                    url = elem.get_attribute("href")
+                    if url and url.startswith("http") and "google" not in url and url not in valid_urls:
+                        if is_valid_url(url):
+                            valid_urls.append(url)
+                            print(f"Added valid URL: {url}")
+                            if len(valid_urls) >= max_results:
+                                break
+                except Exception as e:
+                    print(f"Error extracting URL: {e}")
+            
+            if len(valid_urls) >= max_results:
+                break
+        
+        # If no URLs found, try fallback method with BeautifulSoup
+        if not valid_urls:
+            print("No URLs found with selectors, trying fallback method with BeautifulSoup")
+            soup = BeautifulSoup(browser.page_source, 'html.parser')
+            for a_tag in soup.find_all('a', href=True):
+                url = a_tag['href']
+                # Check if this looks like a result URL (not a Google internal link)
+                if url.startswith('http') and 'google' not in url and url not in valid_urls:
+                    if is_valid_url(url):
                         valid_urls.append(url)
-                        print(f"Found relevant URL: {url}")
+                        print(f"Added valid URL via fallback: {url}")
                         if len(valid_urls) >= max_results:
                             break
-        
+                
+        print(f"Total valid URLs found: {len(valid_urls)}")
         return valid_urls[:max_results]
+    
     except Exception as e:
         print(f"Search error: {str(e)}")
         return []
 
 def extract_content(browser, url: str) -> Optional[str]:
-    """Extract relevant content with improved filtering."""
+    """Extract relevant content with filtering."""
     try:
         browser.get(url)
-        time.sleep(2)  # Reduced wait time
+        time.sleep(3)
         
+        # Get main content using BeautifulSoup
         soup = BeautifulSoup(browser.page_source, 'html.parser')
         
         # Remove unwanted elements
-        for element in soup.find_all(['header', 'footer', 'nav', 'aside', 'script', 'style', 'iframe']):
+        for element in soup.find_all(['header', 'footer', 'nav', 'aside', 'script', 'style']):
             element.decompose()
         
         # Find main content container
@@ -154,7 +190,7 @@ def is_valid_url(url: str) -> bool:
 
 if __name__ == "__main__":
     try:
-        # Set up Chrome options
+        # Set up Chrome options to use your existing Chrome profile
         chrome_options = Options()
         user_data_dir = "/Users/yusufyesilyurt/Library/Application Support/Google/Chrome"
         chrome_options.add_argument(f"user-data-dir={user_data_dir}")
@@ -165,7 +201,7 @@ if __name__ == "__main__":
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option("useAutomationExtension", False)
         
-        # Window settings
+        # Add some random window size to look less like a bot
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--start-maximized")
         
@@ -211,12 +247,12 @@ if __name__ == "__main__":
                         print(f"No relevant content found on site {i}")
                 
                 results.append(result_dict)
-                time.sleep(2)  # Reduced delay between questions
+                time.sleep(3)
                 
         finally:
             browser.quit()
-        
-        # Save results
+            
+        # Create new DataFrame and save to Excel
         results_df = pd.DataFrame(results)
         results_df.to_excel('legal_questions_answers.xlsx', index=False)
         print("Results saved to legal_questions_answers.xlsx")
