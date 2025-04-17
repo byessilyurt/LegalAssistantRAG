@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import re
 from typing import List, Dict, Optional
+import os
 
 def get_search_results(browser, question: str, max_results: int = 3) -> List[str]:
     """Get search results with improved filtering for Polish legal content."""
@@ -219,7 +220,7 @@ if __name__ == "__main__":
         })
         
         # Read questions
-        file_path = "dolnoslaskie_legal_questions_polish.xlsx"
+        file_path = os.path.join(os.path.dirname(__file__), "dolnoslaskie_legal_questions_polish.xlsx")
         df = pd.read_excel(file_path)
         questions = df["Questions"].tolist()
         
@@ -254,8 +255,9 @@ if __name__ == "__main__":
             
         # Create new DataFrame and save to Excel
         results_df = pd.DataFrame(results)
-        results_df.to_excel('legal_questions_answers.xlsx', index=False)
-        print("Results saved to legal_questions_answers.xlsx")
+        output_path = os.path.join(os.path.dirname(__file__), 'legal_questions_answers.xlsx')
+        results_df.to_excel(output_path, index=False)
+        print(f"Results saved to {output_path}")
     
     except Exception as e:
         print(f"Critical error: {str(e)}")
