@@ -183,7 +183,7 @@ if __name__ == "__main__":
         })
         
         # Read questions
-        file_path = os.path.join(os.path.dirname(__file__), "dolnoslaskie_legal_questions_polish.xlsx")
+        file_path = os.path.join(os.path.dirname(__file__), "POL_legal_questions.xlsx")
         df = pd.read_excel(file_path)
         questions = df["Questions"].tolist()
         

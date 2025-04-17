@@ -187,11 +187,74 @@
   white-space: pre-wrap;
 }
 
+.message-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
 .message-time {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.6);
-  align-self: flex-end;
-  margin-top: 4px;
+}
+
+.message-sources {
+  position: relative;
+  cursor: pointer;
+}
+
+.sources-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.sources-tooltip {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background-color: #2a2a35;
+  border: 1px solid #444654;
+  border-radius: 6px;
+  padding: 12px;
+  min-width: 250px;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  display: none;
+}
+
+.message-sources:hover .sources-tooltip {
+  display: block;
+}
+
+.sources-tooltip ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sources-tooltip li {
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sources-tooltip li:last-child {
+  margin-bottom: 0;
+}
+
+.sources-tooltip a {
+  color: #10a37f;
+  text-decoration: none;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.sources-tooltip a:hover {
+  text-decoration: underline;
 }
 
 .message.loading {

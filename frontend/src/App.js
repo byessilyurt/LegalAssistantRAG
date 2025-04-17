@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-// API URL - change this to your FastAPI server address
 const API_URL = 'http://localhost:8000';
 
 function App() {
@@ -94,6 +93,7 @@ function App() {
       role: 'user',
       content: input,
       timestamp: new Date().toISOString(),
+      sources: []
     };
     
     setMessages(prev => [...prev, userMessage]);
@@ -125,20 +125,29 @@ function App() {
       
       const data = await res.json();
       
+      // Add sources to the message object
+      const assistantMessage = {
+        ...data.message,
+        sources: data.sources || []
+      };
+      
       // If this is a new conversation, set it as active
       if (!activeConversation) {
-        setActiveConversation({ id: data.conversation_id, messages: [userMessage, data.message] });
+        setActiveConversation({ 
+          id: data.conversation_id, 
+          messages: [userMessage, assistantMessage] 
+        });
         await fetchConversations();  // Refresh the conversation list
       } else {
         // Update the existing conversation
         setActiveConversation(prev => ({
           ...prev,
-          messages: [...prev.messages, data.message]
+          messages: [...prev.messages, assistantMessage]
         }));
       }
       
       // Add assistant message to UI
-      setMessages(prev => [...prev, data.message]);
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error:', error);
       setError(error.message || 'Sorry, there was an error processing your message.');
@@ -151,6 +160,18 @@ function App() {
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Extract sources from message content
+  const extractSources = (content) => {
+    // Simple regex to detect URLs in the message
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urls = content.match(urlRegex);
+    
+    if (!urls) return null;
+    
+    // Remove duplicates
+    return [...new Set(urls)];
   };
 
   return (
@@ -194,7 +215,7 @@ function App() {
       <main className="chat-main">
         <header className="chat-header">
           <h1>Polish Law for Foreigners</h1>
-          <p className="subtitle">Ask questions about Polish law in any language</p>
+          <p className="subtitle">Ask questions about Polish law</p>
         </header>
         
         <div className="messages-container">
@@ -204,14 +225,39 @@ function App() {
               <p>How can I help you with Polish legal questions today?</p>
             </div>
           ) : (
-            messages.map(msg => (
-              <div key={msg.id} className={`message ${msg.role}`}>
-                <div className="message-content">
-                  {msg.content}
+            messages.map(msg => {
+              // Get sources from the message object or extract from content if not available
+              const sources = msg.sources && msg.sources.length > 0 
+                ? msg.sources 
+                : (msg.role === 'assistant' ? extractSources(msg.content) : null);
+              
+              return (
+                <div key={msg.id} className={`message ${msg.role}`}>
+                  <div className="message-content">
+                    {msg.content}
+                  </div>
+                  <div className="message-footer">
+                    <div className="message-time">{formatTime(msg.timestamp)}</div>
+                    {sources && sources.length > 0 && (
+                      <div className="message-sources">
+                        <span className="sources-label">Sources</span>
+                        <div className="sources-tooltip">
+                          <ul>
+                            {sources.map((source, index) => (
+                              <li key={index}>
+                                <a href={source} target="_blank" rel="noopener noreferrer">
+                                  {source}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="message-time">{formatTime(msg.timestamp)}</div>
-              </div>
-            ))
+              );
+            })
           )}
           
           {loading && (
