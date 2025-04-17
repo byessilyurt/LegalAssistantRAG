@@ -15,10 +15,9 @@ import os
 def get_search_results(browser, question: str, max_results: int = 3) -> List[str]:
     """Get search results with improved filtering for Polish legal content."""
     try:
-        # Add site:gov.pl and site:sejm.gov.pl to prioritize official sources
-        # Add intitle: to find pages with question keywords in title
-        # Add inurl:article or inurl:artykul to find article pages
-        query = f"{question} intitle:{question.split()[0]} inurl:article OR inurl:artykul OR inurl:akt OR inurl:orzeczenie site:gov.pl OR site:sejm.gov.pl OR site:prawo.pl OR site:lex.pl"
+        # Add site: operators to prioritize official and popular legal sites
+        # But don't make it overly restrictive
+        query = f"{question} site:gov.pl OR site:prawo.pl OR site:lex.pl"
         query = query.replace(" ", "+")
         search_url = f"https://www.google.com/search?q={query}&hl=pl&lr=lang_pl"
         
@@ -50,14 +49,10 @@ def get_search_results(browser, question: str, max_results: int = 3) -> List[str
             url = link['href']
             if url.startswith('http') and 'google' not in url:
                 if is_valid_url(url):
-                    # Check if the link text contains relevant keywords
-                    link_text = link.get_text().lower()
-                    keywords = ['artykuł', 'artykul', 'orzeczenie', 'wyrok', 'ustawa', 'rozporządzenie', 'akt']
-                    if any(keyword in link_text for keyword in keywords):
-                        valid_urls.append(url)
-                        print(f"Found relevant URL: {url}")
-                        if len(valid_urls) >= max_results:
-                            break
+                    valid_urls.append(url)
+                    print(f"Found URL: {url}")
+                    if len(valid_urls) >= max_results:
+                        break
         
         return valid_urls[:max_results]
     except Exception as e:
@@ -128,20 +123,14 @@ def is_valid_url(url: str) -> bool:
         # Prioritize official and legal sources
         preferred_domains = [
             'gov.pl', 'sejm.gov.pl', 'prawo.pl', 'lex.pl',
-            'sip.lex.pl', 'orzeczenia.nsa.gov.pl', 'isap.sejm.gov.pl'
+            'migrant.info.pl', 'udsc.gov.pl', 'pip.gov.pl',
+            'biznes.gov.pl', 'cudzoziemcy.gov.pl'
         ]
         
         # Check if URL is from a preferred domain
         for domain in preferred_domains:
             if hostname.endswith(domain) or f'.{domain}' in hostname:
-                # Additional checks for article pages
-                path = parsed.path.lower()
-                article_indicators = ['/article/', '/artykul/', '/akt/', '/orzeczenie/', '/wyrok/']
-                if any(indicator in path for indicator in article_indicators):
-                    return True
-                # Check for numeric IDs in path (common in article URLs)
-                if re.search(r'/\d+', path):
-                    return True
+                return True
         
         # Block unwanted domains
         forbidden_domains = [
