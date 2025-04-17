@@ -32,7 +32,7 @@ def get_search_results(browser, question: str, max_results: int = 3) -> List[str
         except:
             print("Timeout waiting for search results, continuing anyway")
         
-        time.sleep(3)  # Reduced wait time
+        time.sleep(5)  # Additional wait time
         
         # Handle CAPTCHA
         if "consent.google.com" in browser.current_url or "sorry/index" in browser.current_url:
