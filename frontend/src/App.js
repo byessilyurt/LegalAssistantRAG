@@ -5,7 +5,6 @@ import LoginButton from './components/LoginButton';
 import UserProfile from './components/UserProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// API URL - change this to your FastAPI server address
 const API_URL = 'http://localhost:8000';
 
 function App() {
@@ -239,7 +238,7 @@ function App() {
       <main className="chat-main">
         <header className="chat-header">
           <h1>Polish Law for Foreigners</h1>
-          <p className="subtitle">Ask questions about Polish law in any language</p>
+          <p className="subtitle">Ask questions about Polish law</p>
           
           <div className="auth-controls">
             {isLoading ? (
