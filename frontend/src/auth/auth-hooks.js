@@ -9,6 +9,7 @@ export const useAuthentication = () => {
     user,
     getAccessTokenSilently,
     loginWithRedirect,
+    loginWithPopup,
     logout,
   } = useAuth0();
 
@@ -18,6 +19,7 @@ export const useAuthentication = () => {
     user,
     getAccessTokenSilently,
     login: loginWithRedirect,
+    loginWithPopup,
     logout: () => logout({ returnTo: window.location.origin }),
   };
 };

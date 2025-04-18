@@ -3,16 +3,18 @@ import { useAuthentication } from '../auth/auth-hooks';
 import '../styles/auth.css';
 
 const LoginButton = () => {
-  const { login, isLoading } = useAuthentication();
+  const { loginWithPopup, isLoading } = useAuthentication();
   const [showLoginMenu, setShowLoginMenu] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = (connection) => (e) => {
     e.preventDefault();
-    login({
+    loginWithPopup({
       authorizationParams: {
+        connection: connection,
         prompt: 'login',
       }
     });
+    setShowLoginMenu(false);
   };
 
   const handleShowMenu = () => {
@@ -39,7 +41,7 @@ const LoginButton = () => {
             Login to save your conversations and access your history across devices.
           </p>
           <div className="login-providers">
-            <button className="login-provider-button" onClick={handleLogin}>
+            <button className="login-provider-button" onClick={handleLogin('google-oauth2')}>
               <img 
                 src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
                 alt="Google" 
@@ -47,7 +49,7 @@ const LoginButton = () => {
               />
               Continue with Google
             </button>
-            <button className="login-provider-button" onClick={handleLogin}>
+            <button className="login-provider-button" onClick={handleLogin('github')}>
               <img 
                 src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" 
                 alt="GitHub" 
