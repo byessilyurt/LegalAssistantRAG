@@ -14,14 +14,18 @@ const Auth0ProviderWithHistory = ({ children }) => {
       <p>Auth0 configuration missing. Please set REACT_APP_AUTH0_DOMAIN and REACT_APP_AUTH0_CLIENT_ID environment variables.</p>
     </div>;
   }
-  
-  // Handle authentication success
+
   const onRedirectCallback = (appState) => {
+    console.log('Auth callback executed', appState);
     window.history.replaceState(
       {},
       document.title,
       appState?.returnTo || window.location.pathname
     );
+  };
+
+  const onError = (error) => {
+    console.error('Auth error:', error);
   };
 
   return (
@@ -36,6 +40,7 @@ const Auth0ProviderWithHistory = ({ children }) => {
       useRefreshTokens={true}
       cacheLocation="localstorage"
       onRedirectCallback={onRedirectCallback}
+      onError={onError}
     >
       {children}
     </Auth0Provider>
