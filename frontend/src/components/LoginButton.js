@@ -3,32 +3,50 @@ import { useAuthentication } from '../auth/auth-hooks';
 import '../styles/auth.css';
 
 const LoginButton = () => {
-  const { loginWithPopup, isLoading } = useAuthentication();
+  const { loginWithPopup, isLoading, isAuthenticated } = useAuthentication();
   const [showLoginMenu, setShowLoginMenu] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const [loginInProgress, setLoginInProgress] = useState(false);
 
-  const handleLogin = (connection) => (e) => {
+  const handleLogin = (connection) => async (e) => {
     e.preventDefault();
-    loginWithPopup({
-      authorizationParams: {
-        connection: connection,
-        prompt: 'login',
-      }
-    });
-    setShowLoginMenu(false);
+    setLoginError(null);
+    setLoginInProgress(true);
+    
+    try {
+      await loginWithPopup({
+        authorizationParams: {
+          connection: connection,
+          prompt: 'login',
+        }
+      });
+      setShowLoginMenu(false);
+    } catch (error) {
+      console.error('Login error:', error);
+      setLoginError('Login failed. Please try again.');
+    } finally {
+      setLoginInProgress(false);
+    }
   };
 
   const handleShowMenu = () => {
     setShowLoginMenu(!showLoginMenu);
+    setLoginError(null);
   };
+
+  // If already authenticated, don't show login button
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="login-container">
       <button 
         className="login-button" 
         onClick={handleShowMenu}
-        disabled={isLoading}
+        disabled={isLoading || loginInProgress}
       >
-        {isLoading ? 'Loading...' : 'Login'}
+        {isLoading || loginInProgress ? 'Loading...' : 'Login'}
       </button>
       
       {showLoginMenu && (
@@ -40,8 +58,17 @@ const LoginButton = () => {
           <p className="login-description">
             Login to save your conversations and access your history across devices.
           </p>
+          {loginError && (
+            <div className="login-error">
+              {loginError}
+            </div>
+          )}
           <div className="login-providers">
-            <button className="login-provider-button" onClick={handleLogin('google-oauth2')}>
+            <button 
+              className="login-provider-button" 
+              onClick={handleLogin('google-oauth2')}
+              disabled={loginInProgress}
+            >
               <img 
                 src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
                 alt="Google" 
@@ -49,7 +76,11 @@ const LoginButton = () => {
               />
               Continue with Google
             </button>
-            <button className="login-provider-button" onClick={handleLogin('github')}>
+            <button 
+              className="login-provider-button" 
+              onClick={handleLogin('github')}
+              disabled={loginInProgress}
+            >
               <img 
                 src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" 
                 alt="GitHub" 
