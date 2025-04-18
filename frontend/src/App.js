@@ -18,12 +18,24 @@ function App() {
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // Fetch conversations on initial load and auth change
+  // Enhanced effect to handle auth state changes
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchConversations();
+    // Only fetch conversations when authentication state is stable (not in loading state)
+    if (!isLoading) {
+      if (isAuthenticated) {
+        fetchConversations();
+        console.log("User authenticated:", user?.email);
+      } else {
+        // Clear state when user logs out
+        setConversations([]);
+        if (activeConversation?.id) {
+          setActiveConversation(null);
+          setMessages([]);
+        }
+        console.log("User not authenticated");
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoading, user]);
 
   // Scroll to bottom of messages when messages change
   useEffect(() => {

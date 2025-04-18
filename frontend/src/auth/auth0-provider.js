@@ -14,6 +14,15 @@ const Auth0ProviderWithHistory = ({ children }) => {
       <p>Auth0 configuration missing. Please set REACT_APP_AUTH0_DOMAIN and REACT_APP_AUTH0_CLIENT_ID environment variables.</p>
     </div>;
   }
+  
+  // Handle authentication success
+  const onRedirectCallback = (appState) => {
+    window.history.replaceState(
+      {},
+      document.title,
+      appState?.returnTo || window.location.pathname
+    );
+  };
 
   return (
     <Auth0Provider
@@ -24,6 +33,9 @@ const Auth0ProviderWithHistory = ({ children }) => {
         audience: audience,
         scope: 'openid profile email',
       }}
+      useRefreshTokens={true}
+      cacheLocation="localstorage"
+      onRedirectCallback={onRedirectCallback}
     >
       {children}
     </Auth0Provider>

@@ -1,25 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthentication } from '../auth/auth-hooks';
 import '../styles/auth.css';
 
 const LoginButton = () => {
-  const { loginWithPopup, isLoading } = useAuthentication();
+  const { loginWithPopup, isLoading, isAuthenticated } = useAuthentication();
   const [showLoginMenu, setShowLoginMenu] = useState(false);
+  
+  // Close login menu if user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setShowLoginMenu(false);
+    }
+  }, [isAuthenticated]);
 
-  const handleLogin = (connection) => (e) => {
+  const handleLogin = (connection) => async (e) => {
     e.preventDefault();
-    loginWithPopup({
-      authorizationParams: {
-        connection: connection,
-        prompt: 'login',
+    try {
+      await loginWithPopup({
+        authorizationParams: {
+          connection: connection,
+          prompt: 'login',
+        }
+      });
+      
+      // Force a page reload to ensure Auth0 state is properly synchronized
+      if (window.location.pathname === '/') {
+        window.location.reload();
       }
-    });
-    setShowLoginMenu(false);
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   };
 
   const handleShowMenu = () => {
     setShowLoginMenu(!showLoginMenu);
   };
+
+  // Don't render if user is already authenticated
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="login-container">
