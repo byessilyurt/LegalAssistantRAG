@@ -1,7 +1,5 @@
 # Polish Law for Foreigners with AI
 
-![CI](https://github.com/[your-username]/PLforForeignerswithAI/workflows/CI/badge.svg)
-
 An intelligent legal assistant that helps foreigners understand Polish law through natural language interactions, powered by advanced AI and RAG (Retrieval Augmented Generation) technology.
 
 ## 🎯 Project Goals

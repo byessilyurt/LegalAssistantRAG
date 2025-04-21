@@ -3,13 +3,13 @@ import App from './App';
 
 test('renders main chat header', () => {
   render(<App />);
-  const headerElement = screen.getByText(/Polish Law for Foreigners/i);
-  expect(headerElement).toBeInTheDocument();
+  const headerElements = screen.getAllByText(/Legal Assistant 🇵🇱/i);
+  expect(headerElements[0]).toBeInTheDocument();
 });
 
 test('displays welcome message initially', () => {
   render(<App />);
-  const welcomeElement = screen.getByText(/Welcome to Polish Law Assistant/i);
+  const welcomeElement = screen.getByText(/How can I help you with Polish legal questions/i);
   expect(welcomeElement).toBeInTheDocument();
 });
 

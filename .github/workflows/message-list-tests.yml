@@ -1,0 +1,41 @@
+name: MessageList Tests
+
+on:
+  push:
+    branches: [ main, master, dev ]
+    paths:
+      - 'frontend/src/components/messages/**'
+      - 'frontend/src/components/chat/MessageList.js'
+      - 'frontend/src/__tests__/components/messages/**'
+      - 'frontend/src/__tests__/components/chat/MessageList.test.js'
+  pull_request:
+    branches: [ main, master, dev ]
+    paths:
+      - 'frontend/src/components/messages/**'
+      - 'frontend/src/components/chat/MessageList.js'
+      - 'frontend/src/__tests__/components/messages/**'
+      - 'frontend/src/__tests__/components/chat/MessageList.test.js'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run MessageList tests
+      run: npm test MessageList.test.js -- --watchAll=false 

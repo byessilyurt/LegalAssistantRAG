@@ -15,12 +15,15 @@ const MessageList = ({ messages, loading, error }) => {
     
     if (!urls) return null;
     
-    // Remove duplicates
-    return [...new Set(urls)];
+    // Remove duplicates and convert to source objects
+    return [...new Set(urls)].map(url => ({
+      title: url,
+      url: url
+    }));
   };
 
   return (
-    <>
+    <div className="message-list">
       {messages.map(msg => {
         // Get sources from the message object or extract from content if not available
         const sources = msg.sources && msg.sources.length > 0 
@@ -37,12 +40,12 @@ const MessageList = ({ messages, loading, error }) => {
               {sources && sources.length > 0 && (
                 <div className="message-sources">
                   <span className="sources-label">Sources</span>
-                  <div className="sources-tooltip">
+                  <div className="sources-list">
                     <ul>
                       {sources.map((source, index) => (
                         <li key={index}>
-                          <a href={source} target="_blank" rel="noopener noreferrer">
-                            {source}
+                          <a href={source.url} target="_blank" rel="noopener noreferrer">
+                            {source.title}
                           </a>
                         </li>
                       ))}
@@ -57,7 +60,7 @@ const MessageList = ({ messages, loading, error }) => {
       
       {loading && (
         <div className="message assistant loading">
-          <div className="loading-indicator">
+          <div className="loading-indicator" data-testid="loading-indicator">
             <span></span>
             <span></span>
             <span></span>
@@ -70,7 +73,7 @@ const MessageList = ({ messages, loading, error }) => {
           {error}
         </div>
       )}
-    </>
+    </div>
   );
 };
 
