@@ -1,0 +1,265 @@
+/* App Layout */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content-area {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Styles */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #202123;
+  border-bottom: 1px solid #444654;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-title h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #ececf1;
+}
+
+.app-title .subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #8e8ea0;
+}
+
+.hamburger-menu {
+  display: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 30px;
+  height: 24px;
+  position: relative;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.hamburger-menu span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background-color: #ececf1;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 250px;
+  background-color: #202123;
+  border-right: 1px solid #444654;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid #444654;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #ececf1;
+}
+
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.new-chat-btn {
+  background-color: #10a37f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.new-chat-btn:hover {
+  background-color: #0d8c6f;
+}
+
+.close-sidebar {
+  display: none;
+  background: none;
+  border: none;
+  color: #8e8ea0;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-conversations {
+  padding: 1rem;
+  color: #8e8ea0;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.no-conversations p {
+  margin: 0.5rem 0;
+}
+
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.conversation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 0.3rem;
+  transition: background-color 0.2s ease;
+}
+
+.conversation-item:hover {
+  background-color: #2d2d33;
+}
+
+.conversation-item.active {
+  background-color: #3d3d45;
+}
+
+.conversation-title {
+  font-size: 0.875rem;
+  color: #ececf1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.conversation-time {
+  display: block;
+  font-size: 0.7rem;
+  color: #8e8ea0;
+  margin-top: 0.2rem;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #8e8ea0;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.5;
+  padding: 0 0.3rem;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  color: #ff4d4f;
+}
+
+.sidebar-auth-message {
+  padding: 1rem;
+  color: #8e8ea0;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+/* Add sidebar overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hamburger-menu {
+    display: flex;
+  }
+  
+  .close-sidebar {
+    display: flex;
+  }
+  
+  .sidebar {
+    position: fixed;
+    left: -300px;
+    top: 0;
+    bottom: 0;
+    height: 100vh; /* Ensure full height */
+    width: 270px;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    box-shadow: none;
+  }
+  
+  .sidebar.open {
+    transform: translateX(300px);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  }
+  
+  .sidebar.open + .sidebar-overlay {
+    display: block;
+    opacity: 1;
+    pointer-events: all;
+  }
+  
+  .content-area {
+    width: 100%;
+  }
+  
+  .app-title h2 {
+    font-size: 1.1rem;
+  }
+  
+  .app-title .subtitle {
+    font-size: 0.75rem;
+  }
+} 

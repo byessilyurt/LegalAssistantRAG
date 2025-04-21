@@ -5,7 +5,13 @@ import '../styles/auth.css';
 const UserProfile = () => {
   const { user, logout, isLoading } = useAuthentication();
   const [showMenu, setShowMenu] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const menuRef = useRef(null);
+
+  // Reset image error when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -21,6 +27,10 @@ const UserProfile = () => {
     };
   }, [menuRef]);
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   if (isLoading) {
     return <div className="profile-loading">Loading...</div>;
   }
@@ -29,6 +39,13 @@ const UserProfile = () => {
     return null;
   }
 
+  // Get first letter of name or email for the avatar
+  const getInitial = () => {
+    if (user.name) return user.name.charAt(0).toUpperCase();
+    if (user.email) return user.email.charAt(0).toUpperCase();
+    return '?';
+  };
+
   return (
     <div className="user-profile" ref={menuRef}>
       <button
@@ -36,15 +53,16 @@ const UserProfile = () => {
         onClick={() => setShowMenu(!showMenu)}
         aria-label="User menu"
       >
-        {user.picture ? (
+        {user.picture && !imageError ? (
           <img
             src={user.picture}
             alt={user.name || 'User avatar'}
             className="profile-avatar"
+            onError={handleImageError}
           />
         ) : (
           <div className="profile-initials">
-            {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+            {getInitial()}
           </div>
         )}
       </button>
@@ -53,12 +71,21 @@ const UserProfile = () => {
         <div className="profile-menu">
           <div className="profile-menu-header">
             <div className="profile-info">
-              {user.picture && (
-                <img src={user.picture} alt={user.name} className="profile-avatar-large" />
+              {user.picture && !imageError ? (
+                <img 
+                  src={user.picture} 
+                  alt={user.name} 
+                  className="profile-avatar-large" 
+                  onError={handleImageError}
+                />
+              ) : (
+                <div className="profile-initials profile-avatar-large">
+                  {getInitial()}
+                </div>
               )}
               <div className="profile-details">
-                <h4>{user.name}</h4>
-                <p>{user.email}</p>
+                <h4>{user.name || user.email || 'User'}</h4>
+                <p>{user.email || ''}</p>
               </div>
             </div>
           </div>

@@ -72,8 +72,6 @@ async def verify_token(token: str) -> Dict:
     
     except jwt.ExpiredSignatureError:
         raise VerifyTokenError("Token is expired")
-    except jwt.JWTClaimsError:
-        raise VerifyTokenError("Incorrect claims: check audience and issuer")
     except Exception as e:
         raise VerifyTokenError(f"Unable to parse authentication token: {str(e)}")
 

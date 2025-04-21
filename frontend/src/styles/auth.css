@@ -190,6 +190,16 @@
   object-fit: cover;
 }
 
+.profile-initials.profile-avatar-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #10a37f;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+}
+
 .profile-details {
   overflow: hidden;
 }
