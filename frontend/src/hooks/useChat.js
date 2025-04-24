@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuthentication, useAccessToken } from '../auth/auth-hooks';
 
-const API_URL = 'http://localhost:8000';
+// Use relative paths for Vercel serverless functions
+const API_URL = '';
 
 export const useChat = () => {
   const { isAuthenticated } = useAuthentication();

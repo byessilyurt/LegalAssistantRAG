@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: polish-law-backend
+    env: python
+    buildCommand: |
+      # Create query directory in backend
+      mkdir -p backend/query
+      
+      # Copy all query files to backend/query
+      if [ -d "query" ]; then
+        cp -r query/* backend/query/
+        echo "Copied query files to backend/query/"
+      else
+        echo "Warning: query directory not found"
+      fi
+      
+      # Install dependencies
+      pip install -r backend/requirements.txt
+    startCommand: cd backend && python run.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.9.0
+    plan: free 

@@ -14,7 +14,23 @@ from .auth import get_current_user, get_optional_user, User, VerifyTokenError
 from .auth_error import AuthError
 
 # Add the query directory to the path so we can import from it
-sys.path.append(str(Path(__file__).parent.parent.parent / "query"))
+# Try multiple potential locations for the query directory
+query_paths = [
+    Path(__file__).parent.parent.parent / "query",  # Original location: /project/query
+    Path(__file__).parent.parent / "query",         # Deployment location: /project/backend/query
+]
+
+query_path_found = False
+for query_path in query_paths:
+    if query_path.exists():
+        sys.path.append(str(query_path))
+        print(f"Found query directory at: {query_path}")
+        query_path_found = True
+        break
+
+if not query_path_found:
+    print("Error: Could not find query directory")
+    sys.exit(1)
 
 try:
     from prepare_rag import LegalRAG
@@ -38,7 +54,13 @@ app.add_exception_handler(VerifyTokenError, AuthError.invalid_token)
 # Add CORS middleware to allow requests from the frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:3000", 
+        "http://localhost:5173",
+        "https://pl-for-foreigners-with-ai.vercel.app",
+        "https://pl-for-foreigners-with-ai-git-main.vercel.app",
+        "https://pl-for-foreigners-with-ai-git-*.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Content-Type", "Authorization", "Accept"],

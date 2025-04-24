@@ -1,59 +1,74 @@
-# Polish Law for Foreigners - FastAPI Backend
+# Polish Law for Foreigners - Backend
 
-This is the backend API for the Polish Law for Foreigners application. It provides an endpoint for querying the RAG (Retrieval Augmented Generation) system to answer questions about Polish law.
+This is the FastAPI backend for the Polish Law for Foreigners application. It implements a RAG (Retrieval-Augmented Generation) system to answer legal questions about Polish law.
 
-## Setup
+## Deployment on Render
 
-1. Make sure you have Python 3.8+ installed
+The backend is configured for automatic deployment on Render.com using the `render.yaml` file in the root directory of the project.
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Manual Deployment Steps
 
-3. Ensure the `.env` file is set up with your OpenAI API key:
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   ```
+If you want to deploy manually:
 
-4. Make sure the `legal_questions_answers.xlsx` file exists in the correct location (query folder).
+1. Fork or clone this repository
+2. Sign up for a [Render account](https://render.com)
+3. Create a new Web Service and connect it to your GitHub repository
+4. Configure the following settings:
+   - Build Command: `pip install -r backend/requirements.txt`
+   - Start Command: `cd backend && python run.py`
+   - Environment Variables:
+     - `OPENAI_API_KEY`: Your OpenAI API key
+     - `PORT`: 10000 (or the port assigned by Render)
+     - `PYTHON_VERSION`: 3.9.0
 
-## Running the server
+### Environment Variables
 
-Start the FastAPI server:
+Create a copy of `env.example` and rename it to `.env` for local development:
+
 ```bash
+cp env.example .env
+```
+
+Edit the `.env` file and add your OpenAI API key:
+
+```
+OPENAI_API_KEY=your_openai_api_key_here
+PORT=8000
+```
+
+## Local Development
+
+To run the backend locally:
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the server
 python run.py
 ```
 
-This will start the server on http://localhost:8000 by default.
+The server will be available at http://localhost:8000 by default.
 
 ## API Endpoints
 
-### GET /
+- `GET /`: Root endpoint to check if the API is running
+- `POST /api/chat`: Send a message and get a response
+- `GET /api/conversations`: Get all conversations for the current user
+- `GET /api/conversations/{conversation_id}`: Get a specific conversation
+- `DELETE /api/conversations/{conversation_id}`: Delete a conversation
 
-Returns a simple message to confirm the API is running.
+## Architecture
 
-### POST /api/ask
+The backend implements a RAG (Retrieval-Augmented Generation) system using:
 
-Endpoint to ask questions about Polish law.
+- FastAPI for the web framework
+- OpenAI for embeddings and text generation
+- Pandas for data handling
+- Various Excel files containing legal Q&A data
 
-**Request Body:**
-```json
-{
-  "question": "What are the requirements for a temporary residence permit in Poland?"
-}
-```
-
-**Response:**
-```json
-{
-  "answer": "The answer to your question...",
-  "sources": ["https://source1.com", "https://source2.com"]
-}
-```
-
-## Development
-
-- The server has auto-reload enabled, so any changes to the code will automatically restart the server.
-- API documentation is available at http://localhost:8000/docs
-- You can modify the CORS settings in `app/main.py` if you need to allow requests from different origins. 
+When a user sends a message, the system:
+1. Finds relevant documents using embeddings and cosine similarity
+2. Creates a prompt with the relevant context
+3. Generates a response using OpenAI's models
+4. Returns the response with source citations 

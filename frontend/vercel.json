@@ -1,0 +1,7 @@
+{
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "env": {
+        "NEXT_PUBLIC_API_URL": "https://polish-law-backend.onrender.com/api"
+    }
+}
