@@ -24,7 +24,13 @@ export const useChat = () => {
 
   const fetchConversations = async () => {
     try {
-      const data = await fetchConversationsAPI();
+      // Get auth token if authenticated
+      let token = null;
+      if (isAuthenticated) {
+        token = await getToken();
+      }
+      
+      const data = await fetchConversationsAPI(token);
       setConversations(data);
       setError('');
     } catch (error) {
@@ -41,7 +47,19 @@ export const useChat = () => {
 
   const selectConversation = async (conversationId) => {
     try {
-      const res = await fetch(`${API_URL}/conversations/${conversationId}`);
+      // Get auth token if authenticated
+      const headers = {};
+      if (isAuthenticated) {
+        const token = await getToken();
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+      }
+      
+      const res = await fetch(`${API_URL}/conversations/${conversationId}`, {
+        headers,
+        credentials: 'include'
+      });
       
       if (!res.ok) {
         throw new Error('Failed to fetch conversation');
@@ -64,7 +82,13 @@ export const useChat = () => {
 
   const deleteConversation = async (conversationId) => {
     try {
-      await deleteConversationAPI(conversationId);
+      // Get auth token if authenticated
+      let token = null;
+      if (isAuthenticated) {
+        token = await getToken();
+      }
+      
+      await deleteConversationAPI(conversationId, token);
       await fetchConversations();
       if (activeConversation && activeConversation.id === conversationId) {
         createNewConversation();
@@ -95,8 +119,14 @@ export const useChat = () => {
     setInput('');
 
     try {
+      // Get auth token if authenticated
+      let token = null;
+      if (isAuthenticated) {
+        token = await getToken();
+      }
+      
       // Send message to backend using chatService
-      const data = await sendMessage(userMessage.content, activeConversation?.id);
+      const data = await sendMessage(userMessage.content, activeConversation?.id, token);
       
       // Add sources to the message object
       const assistantMessage = {

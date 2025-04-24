@@ -14,12 +14,20 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Forward headers to include Auth
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Forward Authorization header if present
+    if (req.headers.authorization) {
+      headers['Authorization'] = req.headers.authorization;
+    }
+    
     // Forward the request to the backend
     const backendRes = await fetch(`${BACKEND_URL}/${path}`, {
       method: req.method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
     });
 

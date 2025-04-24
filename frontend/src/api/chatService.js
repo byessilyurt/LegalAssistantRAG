@@ -3,29 +3,55 @@
  * This service uses the proxy API route to bypass CORS issues
  */
 
+import { useAuth0 } from '@auth0/auth0-react';
+
 // hard coding the api url for testing
 const API_URL = "https://polishlawwithai.onrender.com";
 //const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
+
+// Helper function to get auth token
+async function getAuthToken() {
+  try {
+    // Get the auth0 instance
+    const auth0 = useAuth0();
+    if (auth0.isAuthenticated) {
+      return await auth0.getAccessTokenSilently();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return null;
+  }
+}
 
 /**
  * Send a message to the chat API
  * @param {string} message - The user's message
  * @param {string} conversationId - Optional conversation ID for continuing a conversation
+ * @param {string} token - Optional auth token
  * @returns {Promise} - The API response
  */
-export async function sendMessage(message, conversationId = null) {
+export async function sendMessage(message, conversationId = null, token = null) {
   try {
     console.log('Sending message to:', `${API_URL}/chat`);
     
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add authorization header if token is provided
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         message,
         conversation_id: conversationId
-      })
+      }),
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -49,11 +75,22 @@ export async function sendMessage(message, conversationId = null) {
 
 /**
  * Get all conversations for the authenticated user
+ * @param {string} token - Optional auth token
  * @returns {Promise} - The API response with conversations
  */
-export async function getConversations() {
+export async function getConversations(token = null) {
   try {
-    const response = await fetch(`${API_URL}/conversations`);
+    const headers = {};
+    
+    // Add authorization header if token is provided
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    const response = await fetch(`${API_URL}/conversations`, {
+      headers,
+      credentials: 'include'
+    });
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -82,12 +119,22 @@ export async function getConversations() {
 /**
  * Delete a conversation
  * @param {string} conversationId - The ID of the conversation to delete
+ * @param {string} token - Optional auth token
  * @returns {Promise} - The API response
  */
-export async function deleteConversation(conversationId) {
+export async function deleteConversation(conversationId, token = null) {
   try {
+    const headers = {};
+    
+    // Add authorization header if token is provided
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers,
+      credentials: 'include'
     });
 
     if (!response.ok) {
