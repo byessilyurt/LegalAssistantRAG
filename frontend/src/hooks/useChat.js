@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthentication, useAccessToken } from '../auth/auth-hooks';
 import { sendMessage, getConversations as fetchConversationsAPI, deleteConversation as deleteConversationAPI } from '../api/chatService';
 
@@ -15,14 +15,7 @@ export const useChat = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
 
-  // Fetch conversations on initial load and auth change
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchConversations();
-    }
-  }, [isAuthenticated]);
-
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       // Get auth token if authenticated
       let token = null;
@@ -43,7 +36,14 @@ export const useChat = () => {
         setError('');
       }
     }
-  };
+  }, [isAuthenticated, getToken, conversations.length]);
+
+  // Fetch conversations on initial load and auth change
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchConversations();
+    }
+  }, [isAuthenticated, fetchConversations]);
 
   const selectConversation = async (conversationId) => {
     try {

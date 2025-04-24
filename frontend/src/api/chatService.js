@@ -3,26 +3,9 @@
  * This service uses the proxy API route to bypass CORS issues
  */
 
-import { useAuth0 } from '@auth0/auth0-react';
-
 // hard coding the api url for testing
 const API_URL = "https://polishlawwithai.onrender.com";
 //const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
-
-// Helper function to get auth token
-async function getAuthToken() {
-  try {
-    // Get the auth0 instance
-    const auth0 = useAuth0();
-    if (auth0.isAuthenticated) {
-      return await auth0.getAccessTokenSilently();
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting auth token:', error);
-    return null;
-  }
-}
 
 /**
  * Send a message to the chat API
