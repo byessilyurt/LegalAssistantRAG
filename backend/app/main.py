@@ -202,3 +202,7 @@ async def delete_conversation(conversation_id: str, user: User = Depends(get_cur
     
     del user_conversations[conversation_id]
     return {"status": "success", "message": "Conversation deleted"} 
+
+@app.options("/api/test-cors")
+async def test_cors():
+    return {"message": "Preflight passed"}
