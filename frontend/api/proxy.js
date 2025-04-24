@@ -3,7 +3,7 @@
  * This route will forward requests to the backend API
  */
 
-const BACKEND_URL = process.env.BACKEND_URL || 'https://polish-law-backend.onrender.com/api';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://polish-law-backend.onrender.com';
 
 export default async function handler(req, res) {
   // Extract the path from the query

@@ -3,9 +3,8 @@
  * This service uses the proxy API route to bypass CORS issues
  */
 
-// The base URL of the API proxy
 // hard coding the api url for testing
-const API_URL = "https://polish-law-backend.onrender.com/api"
+const API_URL = "https://polish-law-backend.onrender.com";
 //const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
 
 /**

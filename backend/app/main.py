@@ -109,7 +109,16 @@ class UserProfile(BaseModel):
 async def read_root():
     return {"message": "Polish Law for Foreigners Chat API is running"}
 
-@app.get("/api/me", response_model=UserProfile)
+@app.get("/test")
+async def test_endpoint():
+    """Simple test endpoint to check if the API is accessible"""
+    return {
+        "status": "success",
+        "message": "Test endpoint is working",
+        "server_time": datetime.now().isoformat()
+    }
+
+@app.get("/me", response_model=UserProfile)
 async def get_user_profile(user: User = Depends(get_current_user)):
     """Get the current user's profile"""
     return UserProfile(
@@ -119,13 +128,13 @@ async def get_user_profile(user: User = Depends(get_current_user)):
         picture=user.picture
     )
 
-@app.get("/api/conversations", response_model=List[Conversation])
+@app.get("/conversations", response_model=List[Conversation])
 async def get_conversations(user: User = Depends(get_current_user)):
     """Get all conversations for the current user"""
     user_conversations = conversations.get(user.id, {})
     return list(user_conversations.values())
 
-@app.get("/api/conversations/{conversation_id}", response_model=Conversation)
+@app.get("/conversations/{conversation_id}", response_model=Conversation)
 async def get_conversation(conversation_id: str, user: User = Depends(get_current_user)):
     """Get a specific conversation by ID"""
     user_conversations = conversations.get(user.id, {})
@@ -135,7 +144,7 @@ async def get_conversation(conversation_id: str, user: User = Depends(get_curren
     
     return user_conversations[conversation_id]
 
-@app.post("/api/chat", response_model=MessageResponse)
+@app.post("/chat", response_model=MessageResponse)
 async def send_message(request: MessageRequest, user: Optional[User] = Depends(get_optional_user)):
     """Send a message and get a response"""
     try:
@@ -192,7 +201,7 @@ async def send_message(request: MessageRequest, user: Optional[User] = Depends(g
         print(f"Error processing message: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing your message: {str(e)}")
 
-@app.delete("/api/conversations/{conversation_id}")
+@app.delete("/conversations/{conversation_id}")
 async def delete_conversation(conversation_id: str, user: User = Depends(get_current_user)):
     """Delete a conversation"""
     user_conversations = conversations.get(user.id, {})
@@ -203,6 +212,6 @@ async def delete_conversation(conversation_id: str, user: User = Depends(get_cur
     del user_conversations[conversation_id]
     return {"status": "success", "message": "Conversation deleted"} 
 
-@app.options("/api/test-cors")
+@app.options("/test-cors")
 async def test_cors():
     return {"message": "Preflight passed"}
