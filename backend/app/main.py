@@ -57,8 +57,13 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000", 
         "http://localhost:5173",
-        "https://polishlegalassistantfrontend.vercel.app/",
-        ],
+        "https://pl-for-foreigners-with-ai.vercel.app",
+        "https://pl-for-foreigners-with-ai-git-main.vercel.app",
+        "https://pl-for-foreigners-with-ai-git-*.vercel.app",
+        "https://polishlegalassistantfrontend.vercel.app",
+        "https://polishlegalassistantfrontend-git-main.vercel.app",
+        "https://polishlegalassistantfrontend-git-*.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Content-Type", "Authorization", "Accept"],
