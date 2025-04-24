@@ -3,7 +3,7 @@
     "trailingSlash": false,
     "env": {
         "NEXT_PUBLIC_API_URL": "/api/proxy",
-        "BACKEND_URL": "https://polish-law-backend.onrender.com"
+        "BACKEND_URL": "https://polishlawwithai.onrender.com"
     },
     "functions": {
         "api/proxy.js": {

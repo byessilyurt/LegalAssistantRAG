@@ -4,7 +4,7 @@
  */
 
 // hard coding the api url for testing
-const API_URL = "https://polish-law-backend.onrender.com";
+const API_URL = "https://polishlawwithai.onrender.com";
 //const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
 
 /**
