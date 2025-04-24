@@ -4,7 +4,9 @@
  */
 
 // The base URL of the API proxy
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
+// hard coding the api url for testing
+const API_URL = "https://polish-law-backend.onrender.com/api"
+//const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
 
 /**
  * Send a message to the chat API
