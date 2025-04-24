@@ -2,6 +2,19 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "env": {
-        "NEXT_PUBLIC_API_URL": "https://polish-law-backend.onrender.com/api"
-    }
+        "NEXT_PUBLIC_API_URL": "/api/proxy",
+        "BACKEND_URL": "https://polish-law-backend.onrender.com/api"
+    },
+    "functions": {
+        "api/proxy.js": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/api/proxy/:path*",
+            "destination": "/api/proxy?path=:path*"
+        }
+    ]
 }

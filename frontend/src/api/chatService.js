@@ -1,9 +1,10 @@
 /**
  * API service for interacting with the Polish Law for Foreigners backend
+ * This service uses the proxy API route to bypass CORS issues
  */
 
-// The base URL of the backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://polish-law-backend.onrender.com/api';
+// The base URL of the API proxy
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
 
 /**
  * Send a message to the chat API
@@ -13,6 +14,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://polish-law-backend.o
  */
 export async function sendMessage(message, conversationId = null) {
   try {
+    console.log('Sending message to:', `${API_URL}/chat`);
+    
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
       headers: {
@@ -21,13 +24,19 @@ export async function sendMessage(message, conversationId = null) {
       body: JSON.stringify({
         message,
         conversation_id: conversationId
-      }),
-      credentials: 'include'
+      })
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Error sending message');
+      const errorText = await response.text();
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.detail || 'Error sending message';
+      } catch (e) {
+        errorMessage = errorText || 'Error sending message';
+      }
+      throw new Error(errorMessage);
     }
 
     return await response.json();
@@ -43,19 +52,29 @@ export async function sendMessage(message, conversationId = null) {
  */
 export async function getConversations() {
   try {
-    const response = await fetch(`${API_URL}/conversations`, {
-      credentials: 'include'
-    });
+    const response = await fetch(`${API_URL}/conversations`);
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Error fetching conversations');
+      if (response.status === 404) {
+        // Return empty array if no conversations found
+        return [];
+      }
+      const errorText = await response.text();
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.detail || 'Error fetching conversations';
+      } catch (e) {
+        errorMessage = errorText || 'Error fetching conversations';
+      }
+      throw new Error(errorMessage);
     }
 
     return await response.json();
   } catch (error) {
     console.error('Error in getConversations:', error);
-    throw error;
+    // Return empty array on error to prevent UI issues
+    return [];
   }
 }
 
@@ -67,13 +86,19 @@ export async function getConversations() {
 export async function deleteConversation(conversationId) {
   try {
     const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
-      method: 'DELETE',
-      credentials: 'include'
+      method: 'DELETE'
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Error deleting conversation');
+      const errorText = await response.text();
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.detail || 'Error deleting conversation';
+      } catch (e) {
+        errorMessage = errorText || 'Error deleting conversation';
+      }
+      throw new Error(errorMessage);
     }
 
     return await response.json();

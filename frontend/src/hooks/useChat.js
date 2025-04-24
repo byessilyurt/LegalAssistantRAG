@@ -41,19 +41,8 @@ export const useChat = () => {
 
   const selectConversation = async (conversationId) => {
     try {
-      // Get auth token if user is authenticated
-      const headers = {};
-      if (isAuthenticated) {
-        const token = await getToken();
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-      }
-
-      const res = await fetch(`${API_URL}/conversations/${conversationId}`, {
-        headers,
-        credentials: 'include'
-      });
+      const res = await fetch(`${API_URL}/conversations/${conversationId}`);
+      
       if (!res.ok) {
         throw new Error('Failed to fetch conversation');
       }
