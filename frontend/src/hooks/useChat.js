@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthentication, useAccessToken } from '../auth/auth-hooks';
 import { sendMessage, getConversations as fetchConversationsAPI, deleteConversation as deleteConversationAPI } from '../api/chatService';
 
-// API URL from environment or default to the backend on Render
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://polish-law-backend.onrender.com/api';
+// API URL from environment or default to the proxy
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/proxy';
 
 export const useChat = () => {
   const { isAuthenticated } = useAuthentication();
@@ -28,15 +28,19 @@ export const useChat = () => {
       setError('');
     } catch (error) {
       console.error('Error fetching conversations:', error);
-      // Only show error for non-new users
-      if (conversations.length > 0) {
-        setError('Failed to load conversations');
-      } else {
-        // For new users with no conversations, don't show error
-        setError('');
-      }
+      // Use the current state to set the error message
+      setConversations(currentConversations => {
+        // Only show error for non-new users
+        if (currentConversations.length > 0) {
+          setError('Failed to load conversations');
+        } else {
+          // For new users with no conversations, don't show error
+          setError('');
+        }
+        return currentConversations; // Keep the current value
+      });
     }
-  }, [isAuthenticated, getToken, conversations.length]);
+  }, [isAuthenticated, getToken]);
 
   // Fetch conversations on initial load and auth change
   useEffect(() => {

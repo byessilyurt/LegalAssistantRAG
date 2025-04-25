@@ -3,9 +3,7 @@
  * This service uses the proxy API route to bypass CORS issues
  */
 
-// hard coding the api url for testing
-const API_URL = "https://polishlawwithai.onrender.com";
-//const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/proxy';
 
 /**
  * Send a message to the chat API
