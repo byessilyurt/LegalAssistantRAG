@@ -1,20 +1,14 @@
 {
-    "cleanUrls": true,
-    "trailingSlash": false,
-    "env": {
-        "NEXT_PUBLIC_API_URL": "/api/proxy",
-        "BACKEND_URL": "https://polishlawwithai.onrender.com"
-    },
     "functions": {
-        "api/proxy.js": {
+        "api/*.js": {
             "memory": 1024,
             "maxDuration": 10
         }
     },
-    "rewrites": [
+    "routes": [
         {
-            "source": "/api/proxy/:path*",
-            "destination": "/api/proxy?path=:path*"
+            "src": "/api/(.*)",
+            "dest": "/api/$1"
         }
     ]
 }

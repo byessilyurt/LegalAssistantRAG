@@ -1,25 +1,170 @@
+# Beginning of the file - add error handling
 import pandas as pd
 import numpy as np
 from openai import OpenAI
 from sklearn.metrics.pairwise import cosine_similarity
 import os
+import tempfile
+import json
+import sys
 from dotenv import load_dotenv
+from google.cloud import storage
 
 # Load environment variables
 load_dotenv()
 
 class LegalRAG:
     def __init__(self):
-        # Initialize OpenAI client
-        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        # Initialize OpenAI client with fallback
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            print("WARNING: No OpenAI API key found in environment variables")
+            api_key = "dummy-key-for-initialization"
+        
+        self.client = OpenAI(api_key=api_key)
+        
+        # Initialize Storage client - with error handling
+        try:
+            self.storage_client = storage.Client()
+        except Exception as e:
+            print(f"Error initializing storage client: {e}")
+            self.storage_client = None
+        
+        # Set bucket name
+        self.bucket_name = os.getenv('GCS_BUCKET_NAME', 'pl-foreigners-legal-advisor')
+        
+        try:
+            # Try to load data
+            self.df = self.load_data_from_storage()
+            self.documents = self.prepare_documents()
+            
+            # Cache for embeddings
+            self.embeddings = self.load_embeddings_from_storage() or {}
+        except Exception as e:
+            print(f"Error initializing RAG system: {e}")
+            # Create dummy data for initialization
+            self.df = pd.DataFrame({
+                'Question': ['Sample question'],
+                'Answer1': ['Sample answer'],
+                'Site1': ['example.com']
+            })
+            self.documents = []
+            self.embeddings = {}
+    
+    def load_data_from_storage(self):
+        """Load data from Google Cloud Storage or local file as fallback."""
+        # First try local file as it's more reliable
+        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'legal_questions_answers.xlsx')
+        
+        if os.path.exists(local_path):
+            print(f"Loading from local file: {local_path}")
+            return pd.read_excel(local_path)
+            
+        # If local file doesn't exist, try cloud storage
+        if self.storage_client:
+            try:
+                print("Trying to load from Cloud Storage...")
+                bucket = self.storage_client.bucket(self.bucket_name)
+                blob = bucket.blob('data/legal_questions_answers.xlsx')
+                
+                if blob.exists():
+                    # Create a temporary file to download to
+                    with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as temp_file:
+                        blob.download_to_filename(temp_file.name)
+                        temp_filename = temp_file.name
+                    
+                    # Load data from temp file
+                    df = pd.read_excel(temp_filename)
+                    
+                    # Clean up temp file
+                    os.remove(temp_filename)
+                    return df
+                else:
+                    print(f"Blob 'data/legal_questions_answers.xlsx' not found in bucket {self.bucket_name}")
+            except Exception as e:
+                print(f"Failed to load from Cloud Storage: {e}")
+        
+        # If we get here, create dummy data
+        print("Creating dummy data for initialization")
+        return pd.DataFrame({
+            'Question': ['Sample question'],
+            'Answer1': ['Sample answer'],
+            'Site1': ['example.com']
+        })
+
+# Rest of your prepare_rag.py file here...
+    def __init__(self):
+        # Initialize OpenAI client  
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            print("WARNING: OPENAI_API_KEY not found in environment!")
+        self.client = OpenAI(api_key=api_key)
+        
+        # Initialize Storage client
+        self.storage_client = storage.Client()
+        
+        # Set bucket name
+        self.bucket_name = os.environ.get('GCS_BUCKET_NAME', 'pl-foreigners-legal-advisor')
         
         # Load and prepare the data
-        base_dir = os.path.dirname(os.path.abspath(__file__))  # gets directory of prepare_rag.py
-        file_path = os.path.join(base_dir, 'legal_questions_answers.xlsx')
-        self.df = pd.read_excel(file_path)
-        self.documents = self.prepare_documents()
-        self.embeddings = {}  # Cache for embeddings
-        
+        try:
+            self.df = self.load_data_from_storage()
+            self.documents = self.prepare_documents()
+            self.embeddings = {}  # Cache for embeddings
+            print(f"Successfully loaded {len(self.documents)} documents from data")
+        except Exception as e:
+            print(f"ERROR initializing RAG: {e}")
+            # Create empty dataframe with expected structure
+            self.df = pd.DataFrame({
+                'Question': ['What is this?'],
+                'Answer1': ['This is a sample answer.'],
+                'Site1': ['example.com']
+            })
+            self.documents = []
+            self.embeddings = {}
+    
+    def load_data_from_storage(self):
+        """Load data from Google Cloud Storage or local file as fallback."""
+        try:
+            # Try to get from cloud storage
+            bucket = self.storage_client.bucket(self.bucket_name)
+            blob = bucket.blob('data/legal_questions_answers.xlsx')
+            
+            # Create a temporary file to download to
+            with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as temp_file:
+                blob.download_to_filename(temp_file.name)
+                temp_filename = temp_file.name
+            
+            # Load data from temp file
+            df = pd.read_excel(temp_filename)
+            
+            # Clean up temp file
+            os.remove(temp_filename)
+            print(f"Successfully loaded data from Cloud Storage with {len(df)} rows")
+            return df
+            
+        except Exception as e:
+            print(f"Failed to load from Cloud Storage: {e}")
+            # Fallback to local file
+            try:
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                file_path = os.path.join(base_dir, 'legal_questions_answers.xlsx')
+                
+                # If in development, use local file
+                if os.path.exists(file_path):
+                    print(f"Loading from local file: {file_path}")
+                    return pd.read_excel(file_path)
+            except Exception as local_e:
+                print(f"Failed to load local file: {local_e}")
+            
+            # If everything fails, create a simple dataframe
+            print("Creating dummy dataframe")
+            return pd.DataFrame({
+                'Question': ['What is this?'],
+                'Answer1': ['This is a sample answer.'],
+                'Site1': ['example.com']
+            })
+    
     def prepare_documents(self):
         """Prepare documents from Excel file."""
         documents = []

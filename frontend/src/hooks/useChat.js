@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthentication, useAccessToken } from '../auth/auth-hooks';
-import { sendMessage, getConversations as fetchConversationsAPI, deleteConversation as deleteConversationAPI } from '../api/chatService';
 
-// API URL from environment or default to the proxy
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '/proxy';
+// Use relative paths for Vercel serverless functions
+const API_URL = '';
 
 export const useChat = () => {
   const { isAuthenticated } = useAuthentication();
@@ -15,56 +14,67 @@ export const useChat = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
 
-  const fetchConversations = useCallback(async () => {
-    try {
-      // Get auth token if authenticated
-      let token = null;
-      if (isAuthenticated) {
-        token = await getToken();
-      }
-      
-      const data = await fetchConversationsAPI(token);
-      setConversations(data);
-      setError('');
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-      // Use the current state to set the error message
-      setConversations(currentConversations => {
-        // Only show error for non-new users
-        if (currentConversations.length > 0) {
-          setError('Failed to load conversations');
-        } else {
-          // For new users with no conversations, don't show error
-          setError('');
-        }
-        return currentConversations; // Keep the current value
-      });
-    }
-  }, [isAuthenticated, getToken]);
-
   // Fetch conversations on initial load and auth change
   useEffect(() => {
     if (isAuthenticated) {
       fetchConversations();
     }
-  }, [isAuthenticated, fetchConversations]);
+  }, [isAuthenticated]);
 
-  const selectConversation = async (conversationId) => {
+  const fetchConversations = async () => {
     try {
-      // Get auth token if authenticated
+      // Get auth token if user is authenticated
       const headers = {};
       if (isAuthenticated) {
         const token = await getToken();
         if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
+          headers.Authorization = `Bearer ${token}`;
         }
       }
-      
-      const res = await fetch(`${API_URL}/conversations/${conversationId}`, {
-        headers,
-        credentials: 'include'
+
+      const res = await fetch(`${API_URL}/api/conversations`, {
+        headers
       });
       
+      if (!res.ok) {
+        // If the response is 404, it means the user has no conversations yet
+        if (res.status === 404) {
+          setConversations([]);
+          setError('');
+          return;
+        }
+        throw new Error('Failed to fetch conversations');
+      }
+      
+      const data = await res.json();
+      setConversations(data);
+      setError('');
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      // Only show error for non-new users
+      if (conversations.length > 0) {
+        setError('Failed to load conversations');
+      } else {
+        // For new users with no conversations, don't show error
+        setError('');
+      }
+    }
+  };
+
+  const selectConversation = async (conversationId) => {
+    try {
+      // Get auth token if user is authenticated
+      const headers = {};
+      if (isAuthenticated) {
+        const token = await getToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
+      const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
+        headers
+      });
       if (!res.ok) {
         throw new Error('Failed to fetch conversation');
       }
@@ -86,13 +96,22 @@ export const useChat = () => {
 
   const deleteConversation = async (conversationId) => {
     try {
-      // Get auth token if authenticated
-      let token = null;
+      // Get auth token if user is authenticated
+      const headers = {};
       if (isAuthenticated) {
-        token = await getToken();
+        const token = await getToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
       }
-      
-      await deleteConversationAPI(conversationId, token);
+
+      const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
+        method: 'DELETE',
+        headers
+      });
+      if (!res.ok) {
+        throw new Error('Failed to delete conversation');
+      }
       await fetchConversations();
       if (activeConversation && activeConversation.id === conversationId) {
         createNewConversation();
@@ -122,15 +141,41 @@ export const useChat = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
 
+    // Prepare request payload
+    const payload = {
+      message: userMessage.content,
+    };
+
+    // If we have an active conversation, include its ID
+    if (activeConversation) {
+      payload.conversation_id = activeConversation.id;
+    }
+
     try {
-      // Get auth token if authenticated
-      let token = null;
+      // Get auth token if user is authenticated
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
       if (isAuthenticated) {
-        token = await getToken();
+        const token = await getToken();
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
+      const res = await fetch(`${API_URL}/api/chat`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || 'Failed to get answer');
       }
       
-      // Send message to backend using chatService
-      const data = await sendMessage(userMessage.content, activeConversation?.id, token);
+      const data = await res.json();
       
       // Add sources to the message object
       const assistantMessage = {

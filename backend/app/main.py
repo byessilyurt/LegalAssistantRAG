@@ -12,31 +12,20 @@ import jwt
 # Auth imports
 from .auth import get_current_user, get_optional_user, User, VerifyTokenError
 from .auth_error import AuthError
+from .storage import save_conversation, get_conversation, get_user_conversations, delete_conversation
 
-# Add the query directory to the path so we can import from it
-# Try multiple potential locations for the query directory
-query_paths = [
-    Path(__file__).parent.parent.parent / "query",  # Original location: /project/query
-    Path(__file__).parent.parent / "query",         # Deployment location: /project/backend/query
-]
-
-query_path_found = False
-for query_path in query_paths:
-    if query_path.exists():
-        sys.path.append(str(query_path))
-        print(f"Found query directory at: {query_path}")
-        query_path_found = True
-        break
-
-if not query_path_found:
-    print("Error: Could not find query directory")
-    sys.exit(1)
-
+# Import the query module - using absolute imports
 try:
-    from prepare_rag import LegalRAG
+    from query.prepare_rag import LegalRAG
 except ImportError as e:
     print(f"Error importing LegalRAG: {e}")
-    sys.exit(1)
+    # Try relative import if absolute fails
+    try:
+        sys.path.append(str(Path(__file__).parent.parent.parent))
+        from query.prepare_rag import LegalRAG
+    except ImportError as e:
+        print(f"Error importing LegalRAG with relative path: {e}")
+        sys.exit(1)
 
 # Initialize the FastAPI app
 app = FastAPI(
@@ -57,24 +46,21 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000", 
         "http://localhost:5173",
-        "https://pl-for-foreigners-with-ai.vercel.app",
-        "https://pl-for-foreigners-with-ai-git-main.vercel.app",
-        "https://pl-for-foreigners-with-ai-git-*.vercel.app",
-        "https://polishlegalassistantfrontend.vercel.app",
-        "https://polishlegalassistantfrontend-git-main.vercel.app",
-        "https://polishlegalassistantfrontend-git-*.vercel.app"
+        "https://pl-for-foreigners-with-ai.vercel.app", # Add your Vercel deployed frontend URL
+        "*"  # For development - remove in production
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Content-Type", "Authorization", "Accept"],
 )
 
-# Initialize the RAG system
-rag = LegalRAG()
-
-# In-memory storage for conversations
-# In a production app, you would use a database
-conversations: Dict[str, Dict] = {}  # user_id -> conversation_id -> conversation
+# Initialize the RAG system with error handling
+try:
+    rag = LegalRAG()
+    print("RAG system initialized successfully")
+except Exception as e:
+    print(f"Error initializing RAG system: {e}")
+    rag = None
 
 # Models
 class Message(BaseModel):
@@ -85,7 +71,7 @@ class Message(BaseModel):
 
 class Conversation(BaseModel):
     id: str
-    user_id: str  # Added user_id field
+    user_id: str
     messages: List[Message] = []
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
@@ -107,18 +93,11 @@ class UserProfile(BaseModel):
 
 @app.get("/")
 async def read_root():
+    if rag is None:
+        return {"message": "Polish Law for Foreigners Chat API is running, but RAG system failed to initialize"}
     return {"message": "Polish Law for Foreigners Chat API is running"}
 
-@app.get("/test")
-async def test_endpoint():
-    """Simple test endpoint to check if the API is accessible"""
-    return {
-        "status": "success",
-        "message": "Test endpoint is working",
-        "server_time": datetime.now().isoformat()
-    }
-
-@app.get("/me", response_model=UserProfile)
+@app.get("/api/me", response_model=UserProfile)
 async def get_user_profile(user: User = Depends(get_current_user)):
     """Get the current user's profile"""
     return UserProfile(
@@ -128,50 +107,55 @@ async def get_user_profile(user: User = Depends(get_current_user)):
         picture=user.picture
     )
 
-@app.get("/conversations", response_model=List[Conversation])
+@app.get("/api/conversations", response_model=List[Conversation])
 async def get_conversations(user: User = Depends(get_current_user)):
     """Get all conversations for the current user"""
-    user_conversations = conversations.get(user.id, {})
-    return list(user_conversations.values())
+    return get_user_conversations(user.id)
 
-@app.get("/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(conversation_id: str, user: User = Depends(get_current_user)):
+@app.get("/api/conversations/{conversation_id}", response_model=Conversation)
+async def get_conversation_endpoint(conversation_id: str, user: User = Depends(get_current_user)):
     """Get a specific conversation by ID"""
-    user_conversations = conversations.get(user.id, {})
+    conversation = get_conversation(user.id, conversation_id)
     
-    if conversation_id not in user_conversations:
+    if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
     
-    return user_conversations[conversation_id]
+    return conversation
 
-@app.post("/chat", response_model=MessageResponse)
+@app.post("/api/chat", response_model=MessageResponse)
 async def send_message(request: MessageRequest, user: Optional[User] = Depends(get_optional_user)):
     """Send a message and get a response"""
     try:
+        if rag is None:
+            raise HTTPException(status_code=500, detail="RAG system is not available. Please check server logs.")
+            
         user_id = user.id if user else "anonymous"
-        
-        # Initialize user's conversations dict if it doesn't exist
-        if user_id not in conversations:
-            conversations[user_id] = {}
         
         # Get or create conversation
         conversation_id = request.conversation_id
-        user_conversations = conversations[user_id]
+        conversation = None
         
-        if not conversation_id or conversation_id not in user_conversations:
+        if conversation_id:
+            conversation = get_conversation(user_id, conversation_id)
+        
+        if not conversation:
+            # Create new conversation
             conversation_id = str(uuid.uuid4())
-            user_conversations[conversation_id] = Conversation(id=conversation_id, user_id=user_id)
-        
-        conversation = user_conversations[conversation_id]
+            conversation = Conversation(id=conversation_id, user_id=user_id)
         
         # Add user message to conversation
         user_message = Message(role="user", content=request.message)
-        conversation.messages.append(user_message)
+        
+        if not conversation.get('messages'):
+            conversation['messages'] = []
+            
+        conversation['messages'].append(user_message.dict())
         
         # Build conversation history for context
+        messages = conversation.get('messages', [])
         conversation_history = "\n".join([
-            f"{msg.role}: {msg.content}" 
-            for msg in conversation.messages[-10:]  # Get last 10 messages for context
+            f"{msg['role']}: {msg['content']}" 
+            for msg in messages[-10:]  # Get last 10 messages for context
         ])
         
         # Generate response using RAG with conversation context
@@ -186,10 +170,13 @@ async def send_message(request: MessageRequest, user: Optional[User] = Depends(g
         )
         
         # Add to conversation
-        conversation.messages.append(assistant_message)
+        conversation['messages'].append(assistant_message.dict())
         
         # Update conversation timestamp
-        conversation.updated_at = datetime.now()
+        conversation['updated_at'] = datetime.now().isoformat()
+        
+        # Save conversation
+        save_conversation(user_id, conversation_id, conversation)
         
         return {
             "conversation_id": conversation_id,
@@ -201,17 +188,13 @@ async def send_message(request: MessageRequest, user: Optional[User] = Depends(g
         print(f"Error processing message: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing your message: {str(e)}")
 
-@app.delete("/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str, user: User = Depends(get_current_user)):
+@app.delete("/api/conversations/{conversation_id}")
+async def delete_conversation_endpoint(conversation_id: str, user: User = Depends(get_current_user)):
     """Delete a conversation"""
-    user_conversations = conversations.get(user.id, {})
+    conversation = get_conversation(user.id, conversation_id)
     
-    if conversation_id not in user_conversations:
+    if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
     
-    del user_conversations[conversation_id]
+    delete_conversation(user.id, conversation_id)
     return {"status": "success", "message": "Conversation deleted"} 
-
-@app.options("/test-cors")
-async def test_cors():
-    return {"message": "Preflight passed"}
