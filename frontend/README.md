@@ -7,13 +7,14 @@ A React-based frontend for the Polish Law for Foreigners application. This appli
 - **Source References**: Hover over the "Sources" label to see references for each answer
 - **Conversation History**: Keep track of past conversations in the sidebar
 - **Clean, Modern UI**: Easy to use interface for all users
+- **Cloud Integration**: Connects to the Cloud Run backend with fallback to serverless functions
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 14+ installed
-- Backend API running (see backend README)
+- Backend API running (see backend README) or deployed to Google Cloud Run
 
 ### Installation
 
@@ -38,7 +39,47 @@ A React-based frontend for the Polish Law for Foreigners application. This appli
 
 ## Configuration
 
-The API URL is set in the `App.js` file. By default, it points to `http://localhost:8000`. If your backend is running on a different URL, update the `API_URL` constant.
+You can configure the backend API URL in several ways:
+
+1. **Environment Variables**: Create a `.env.local` file with:
+   ```
+   VITE_API_BASE_URL=https://your-cloud-run-url
+   ```
+
+2. **Update Backend URL Script**: Use the provided script to update the URL:
+   ```bash
+   node update-backend-url.js YOUR_CLOUD_RUN_URL
+   ```
+
+3. **Manual Edit**: Update the `API_BASE_URL` in `src/api/chatApi.js`
+
+## Deployment
+
+### Deploying to Vercel
+
+1. Install the Vercel CLI:
+   ```bash
+   npm install -g vercel
+   ```
+
+2. Update the backend URL to point to your Cloud Run instance:
+   ```bash
+   node update-backend-url.js YOUR_CLOUD_RUN_URL
+   ```
+
+3. Deploy to Vercel:
+   ```bash
+   vercel --prod
+   ```
+
+## Backend Integration
+
+The frontend integrates with two backend options:
+
+1. **Cloud Run Backend**: The primary backend running the full RAG system
+2. **Vercel Serverless Functions**: Fallback options for simple queries
+
+The system automatically falls back to serverless functions if the Cloud Run backend is unavailable.
 
 ## Available Scripts
 
@@ -55,6 +96,10 @@ Launches the test runner in interactive watch mode
 ### `npm run build`
 
 Builds the app for production to the `build` folder
+
+### `node update-backend-url.js URL`
+
+Updates the Cloud Run backend URL in the code
 
 ## Contact
 
