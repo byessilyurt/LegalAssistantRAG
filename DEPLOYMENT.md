@@ -81,14 +81,20 @@ The frontend is already deployed to Vercel, but you'll need to update it to use 
    cd frontend
    node update-backend-url.js YOUR_CLOUD_RUN_URL
    ```
+   This script updates the API URL in the code and creates a `.env.local` file.
 
-2. Commit the changes:
+2. Configure Environment Variables in Vercel:
+   - In your Vercel project dashboard, go to Settings > Environment Variables
+   - Add `REACT_APP_API_BASE_URL` with your Cloud Run URL as the value
+   - Add other required environment variables such as Auth0 configuration if needed
+
+3. Commit the changes:
    ```
    git add src/api/chatApi.js
    git commit -m "Update backend URL to Cloud Run"
    ```
 
-3. Push and deploy to Vercel:
+4. Push and deploy to Vercel:
    ```
    git push
    vercel --prod
@@ -115,7 +121,8 @@ The frontend is already deployed to Vercel, but you'll need to update it to use 
 ### Frontend Issues
 
 - Check browser console for any network errors
-- Verify the backend URL is correctly set in the frontend code
+- Verify the environment variables are correctly set in Vercel dashboard
+- Check that `REACT_APP_API_BASE_URL` points to your Cloud Run backend
 - Test the backend directly with curl:
   ```
   curl YOUR_CLOUD_RUN_URL

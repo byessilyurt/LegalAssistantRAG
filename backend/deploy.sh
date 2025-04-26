@@ -112,5 +112,5 @@ SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --platform managed --re
 
 echo -e "${GREEN}Deployment complete!${NC}"
 echo -e "Your API is available at: ${GREEN}$SERVICE_URL${NC}"
-echo -e "Use this URL in your frontend application by setting VITE_API_BASE_URL in your frontend .env file"
+echo -e "Use this URL in your frontend application by setting REACT_APP_API_BASE_URL in your frontend .env file"
 echo -e "Test your API with: curl $SERVICE_URL" 
