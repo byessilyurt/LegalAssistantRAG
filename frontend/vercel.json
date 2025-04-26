@@ -9,20 +9,16 @@
         {
             "src": "/api/(.*)",
             "dest": "/api/$1"
-        }
-    ],
-    "builds": [
+        },
         {
-            "src": "package.json",
-            "use": "@vercel/node",
-            "config": {
-                "distDir": "build"
-            }
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ],
     "build": {
         "env": {
-            "NODE_VERSION": "18.x"
+            "CI": "false"
         }
-    }
+    },
+    "framework": "create-react-app"
 }
