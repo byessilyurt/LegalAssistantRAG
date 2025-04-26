@@ -2,9 +2,8 @@
 // This connects to our Cloud Run backend
 
 // Set this to your deployed Cloud Run backend URL
-// You can override this in .env.local with REACT_APP_API_BASE_URL or VITE_API_BASE_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-                    process.env.REACT_APP_API_BASE_URL || 
+// You can override this in .env.local with REACT_APP_API_BASE_URL
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 
                     'https://pl-foreigners-legal-api-abcdef123-uc.a.run.app';
 
 const DEFAULT_HEADERS = {

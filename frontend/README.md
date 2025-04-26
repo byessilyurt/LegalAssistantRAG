@@ -43,7 +43,7 @@ You can configure the backend API URL in several ways:
 
 1. **Environment Variables**: Create a `.env.local` file with:
    ```
-   VITE_API_BASE_URL=https://your-cloud-run-url
+   REACT_APP_API_BASE_URL=https://your-cloud-run-url
    ```
 
 2. **Update Backend URL Script**: Use the provided script to update the URL:
@@ -67,7 +67,12 @@ You can configure the backend API URL in several ways:
    node update-backend-url.js YOUR_CLOUD_RUN_URL
    ```
 
-3. Deploy to Vercel:
+3. Add environment variables in the Vercel dashboard:
+   - Go to your project settings in Vercel
+   - Add `REACT_APP_API_BASE_URL` with your Cloud Run URL
+   - Add any other required environment variables (Auth0, etc.)
+
+4. Deploy to Vercel:
    ```bash
    vercel --prod
    ```
@@ -99,7 +104,7 @@ Builds the app for production to the `build` folder
 
 ### `node update-backend-url.js URL`
 
-Updates the Cloud Run backend URL in the code
+Updates the Cloud Run backend URL in the code and creates a .env.local file
 
 ## Contact
 

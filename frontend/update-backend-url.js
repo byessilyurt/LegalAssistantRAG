@@ -39,7 +39,7 @@ try {
 // Update the API_BASE_URL constant
 const updatedContent = content.replace(
   /const API_BASE_URL = .*?;/,
-  `const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || process.env.REACT_APP_API_BASE_URL || '${backendUrl}';`
+  `const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '${backendUrl}';`
 );
 
 // Write the updated content back to the file
@@ -49,6 +49,16 @@ try {
 } catch (error) {
   console.error(`Error writing to file ${apiFilePath}:`, error);
   process.exit(1);
+}
+
+// Create or update .env.local file with the Backend URL
+try {
+  const envFilePath = path.join(__dirname, '.env.local');
+  fs.writeFileSync(envFilePath, `REACT_APP_API_BASE_URL=${backendUrl}\n`, 'utf8');
+  console.log(`Updated REACT_APP_API_BASE_URL in .env.local to ${backendUrl}`);
+} catch (error) {
+  console.error(`Error writing to .env.local: ${error}`);
+  console.log('Please manually create a .env.local file with REACT_APP_API_BASE_URL set to your backend URL');
 }
 
 console.log('Backend URL updated successfully!');
