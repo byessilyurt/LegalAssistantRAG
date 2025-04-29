@@ -7,7 +7,7 @@ A React-based frontend for the Polish Law for Foreigners application. This appli
 - **Source References**: Hover over the "Sources" label to see references for each answer
 - **Conversation History**: Keep track of past conversations in the sidebar
 - **Clean, Modern UI**: Easy to use interface for all users
-- **Cloud Integration**: Connects to the Cloud Run backend with fallback to serverless functions
+- **Cloud Integration**: Connects to the Cloud Run backend.
 
 ## Getting Started
 
@@ -82,9 +82,6 @@ You can configure the backend API URL in several ways:
 The frontend integrates with two backend options:
 
 1. **Cloud Run Backend**: The primary backend running the full RAG system
-2. **Vercel Serverless Functions**: Fallback options for simple queries
-
-The system automatically falls back to serverless functions if the Cloud Run backend is unavailable.
 
 ## Available Scripts
 

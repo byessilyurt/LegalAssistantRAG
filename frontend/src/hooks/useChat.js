@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuthentication, useAccessToken } from '../auth/auth-hooks';
+import chatApi from '../api/chatApi';
 
-// Use relative paths for Vercel serverless functions
-const API_URL = '';
+const API_URL = 'https://pl-foreigners-legal-api-687968958844.us-central1.run.app';
 
 export const useChat = () => {
   const { isAuthenticated } = useAuthentication();
@@ -14,39 +14,29 @@ export const useChat = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
 
+  // Store auth token in localStorage for chatApi to use
+  const updateAuthToken = async () => {
+    if (isAuthenticated) {
+      const token = await getToken();
+      if (token) {
+        localStorage.setItem('auth_token', token);
+      }
+    } else {
+      localStorage.removeItem('auth_token');
+    }
+  };
+
   // Fetch conversations on initial load and auth change
   useEffect(() => {
     if (isAuthenticated) {
-      fetchConversations();
+      updateAuthToken().then(() => fetchConversations());
     }
   }, [isAuthenticated]);
 
   const fetchConversations = async () => {
     try {
-      // Get auth token if user is authenticated
-      const headers = {};
-      if (isAuthenticated) {
-        const token = await getToken();
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-      }
-
-      const res = await fetch(`${API_URL}/api/conversations`, {
-        headers
-      });
-      
-      if (!res.ok) {
-        // If the response is 404, it means the user has no conversations yet
-        if (res.status === 404) {
-          setConversations([]);
-          setError('');
-          return;
-        }
-        throw new Error('Failed to fetch conversations');
-      }
-      
-      const data = await res.json();
+      await updateAuthToken();
+      const data = await chatApi.getConversations();
       setConversations(data);
       setError('');
     } catch (error) {
@@ -63,22 +53,8 @@ export const useChat = () => {
 
   const selectConversation = async (conversationId) => {
     try {
-      // Get auth token if user is authenticated
-      const headers = {};
-      if (isAuthenticated) {
-        const token = await getToken();
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-      }
-
-      const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
-        headers
-      });
-      if (!res.ok) {
-        throw new Error('Failed to fetch conversation');
-      }
-      const data = await res.json();
+      await updateAuthToken();
+      const data = await chatApi.getConversation(conversationId);
       setActiveConversation(data);
       setMessages(data.messages);
       setError('');
@@ -96,22 +72,8 @@ export const useChat = () => {
 
   const deleteConversation = async (conversationId) => {
     try {
-      // Get auth token if user is authenticated
-      const headers = {};
-      if (isAuthenticated) {
-        const token = await getToken();
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-      }
-
-      const res = await fetch(`${API_URL}/api/conversations/${conversationId}`, {
-        method: 'DELETE',
-        headers
-      });
-      if (!res.ok) {
-        throw new Error('Failed to delete conversation');
-      }
+      await updateAuthToken();
+      await chatApi.deleteConversation(conversationId);
       await fetchConversations();
       if (activeConversation && activeConversation.id === conversationId) {
         createNewConversation();
@@ -141,41 +103,15 @@ export const useChat = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
 
-    // Prepare request payload
-    const payload = {
-      message: userMessage.content,
-    };
-
-    // If we have an active conversation, include its ID
-    if (activeConversation) {
-      payload.conversation_id = activeConversation.id;
-    }
-
     try {
-      // Get auth token if user is authenticated
-      const headers = {
-        'Content-Type': 'application/json',
-      };
+      // Update auth token
+      await updateAuthToken();
       
-      if (isAuthenticated) {
-        const token = await getToken();
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-      }
-
-      const res = await fetch(`${API_URL}/api/chat`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-      });
+      // Get conversation ID if we have an active conversation
+      const conversationId = activeConversation ? activeConversation.id : null;
       
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || 'Failed to get answer');
-      }
-      
-      const data = await res.json();
+      // Send message using chatApi
+      const data = await chatApi.sendMessage(userMessage.content, conversationId);
       
       // Add sources to the message object
       const assistantMessage = {

@@ -4,7 +4,7 @@
 // Set this to your deployed Cloud Run backend URL
 // You can override this in .env.local with REACT_APP_API_BASE_URL
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 
-                    'https://pl-foreigners-legal-api-abcdef123-uc.a.run.app';
+                    'https://pl-foreigners-legal-api-687968958844.us-central1.run.app';
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -35,41 +35,15 @@ const chatApi = {
       });
 
       if (!response.ok) {
-        // If the Cloud Run backend fails, fallback to serverless function
-        console.warn('Cloud Run backend request failed, falling back to serverless function');
-        return chatApi.sendMessageFallback(message, conversationId);
+		  console.warn('Cloud Run backend request failed');
       }
 
       return await response.json();
     } catch (error) {
       console.error('Error sending message to Cloud Run backend:', error);
-      // Fallback to serverless function
-      return chatApi.sendMessageFallback(message, conversationId);
     }
   },
 
-  // Fallback to use Vercel serverless function
-  sendMessageFallback: async (message, conversationId = null) => {
-    try {
-      const response = await fetch('/api/chat-ai', {
-        method: 'POST',
-        headers: DEFAULT_HEADERS,
-        body: JSON.stringify({
-          message,
-          conversation_id: conversationId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error sending message to serverless function:', error);
-      throw error;
-    }
-  },
 
   // Get all conversations for the user
   getConversations: async () => {

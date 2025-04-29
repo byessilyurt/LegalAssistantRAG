@@ -1,9 +1,0 @@
-{
-    "name": "pl-for-foreigners-api",
-    "version": "1.0.0",
-    "description": "Serverless functions for PL for Foreigners",
-    "dependencies": {
-        "express-oauth2-jwt-bearer": "^1.6.0",
-        "jsonwebtoken": "^9.0.2"
-    }
-}

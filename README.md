@@ -1,19 +1,19 @@
-# Polish Law for Foreigners with AI
+# Legal Assistant with AI
 
 An intelligent legal assistant that helps foreigners understand Polish law through natural language interactions, powered by advanced AI and RAG (Retrieval Augmented Generation) technology.
 
 ## 🎯 Project Goals
 
 This project aims to make Polish legal information more accessible to foreigners by:
-- Providing accurate legal information from verified sources
-- Offering multi-modal interaction (text, voice, image)
+- Providing accurate legal information from verified sources 
+- Offering multi-modal interaction (text, voice, image) //TODO
 - Creating a user-friendly interface for legal queries
 - Ensuring responses are based on current Polish law
 
 ## 🚀 Features
 
 ### Data Collection & Processing
-- Automated web scraping of legal resources
+- Automated web scraping of legal resources //SEMI-AUTOMATED
 - Content filtering and validation
 - Structured data storage in Excel/PDF formats
 - Exclusion of unofficial or outdated sources
@@ -64,7 +64,6 @@ This project aims to make Polish legal information more accessible to foreigners
 /
 ├── frontend/              # React frontend application (Vercel)
 │   ├── src/               # React source code
-│   ├── api/               # Serverless functions for Vercel
 │   └── update-backend-url.js  # Script to update backend URL
 │
 ├── backend/               # FastAPI backend application (Google Cloud Run)
