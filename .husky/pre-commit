@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Change to frontend directory
+cd frontend
+
+# Run tests to make sure they pass before committing
+echo "🧪 Running frontend tests..."
+npm run test:ci
+
+# If tests fail, prevent the commit
+if [ $? -ne 0 ]; then
+  echo "❌ Frontend tests failed. Please fix the tests before committing."
+  exit 1
+fi
+
+echo "✅ All tests passed! Proceeding with commit..."

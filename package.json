@@ -2,5 +2,11 @@
   "dependencies": {
     "@google-cloud/firestore": "^7.11.0",
     "@vercel/analytics": "^1.5.0"
+  },
+  "devDependencies": {
+    "husky": "^8.0.0"
+  },
+  "scripts": {
+    "prepare": "husky install"
   }
 }

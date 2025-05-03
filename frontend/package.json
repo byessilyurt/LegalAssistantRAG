@@ -18,7 +18,10 @@
     "build": "DISABLE_ESLINT_PLUGIN=true CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "vercel-build": "DISABLE_ESLINT_PLUGIN=true CI=false react-scripts build"
+    "vercel-build": "DISABLE_ESLINT_PLUGIN=true CI=false react-scripts build",
+    "prepare": "cd .. && husky install frontend/.husky",
+    "lint-staged": "lint-staged",
+    "test:ci": "CI=true react-scripts test --watchAll=false"
   },
   "eslintConfig": {
     "extends": [
@@ -40,5 +43,13 @@
   },
   "engines": {
     "node": ">=16.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "npm run test:ci"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^8.0.0"
   }
 }

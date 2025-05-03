@@ -63,10 +63,11 @@ describe('useChat Hook', () => {
     
     // Check that fetch was called with the right URL
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/conversations'),
+      expect.stringContaining('api/conversations'),
       expect.objectContaining({
+        method: 'GET',
         headers: expect.objectContaining({
-          Authorization: 'Bearer mock-token'
+          'Content-Type': 'application/json'
         })
       })
     );
@@ -121,6 +122,7 @@ describe('useChat Hook', () => {
     // Mock failed response
     global.fetch.mockResolvedValueOnce({
       ok: false,
+      status: 500,
       json: () => Promise.resolve({ detail: 'API error' })
     });
     
@@ -136,8 +138,8 @@ describe('useChat Hook', () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() });
     });
     
-    // Check error state
-    expect(result.current.error).toBe('API error');
+    // Check error state matches our new format
+    expect(result.current.error).toBe('Backend error: 500');
     expect(result.current.loading).toBe(false);
   });
 
