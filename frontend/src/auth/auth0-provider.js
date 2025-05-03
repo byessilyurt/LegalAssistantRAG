@@ -2,18 +2,24 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import React from 'react';
 
 // Auth0 configuration
-const domain = process.env.REACT_APP_AUTH0_DOMAIN;
-const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID;
+const domain = process.env.REACT_APP_AUTH0_DOMAIN || 'placeholder-domain';
+const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID || 'placeholder-client-id';
 const audience = process.env.REACT_APP_AUTH0_AUDIENCE;
 
 const Auth0ProviderWithHistory = ({ children }) => {
   const redirectUri = window.location.origin;
 
-  // For local development or if environment variables are missing, continue without auth
-  if (!domain || !clientId) {
-    console.warn('Auth0 configuration missing. Authentication will be disabled.');
-    // Instead of blocking the app, just render the children without auth
-    return children;
+  // Check if we have actual Auth0 credentials
+  const hasValidAuth0Config = !!(
+    domain && 
+    clientId && 
+    domain !== 'placeholder-domain' && 
+    clientId !== 'placeholder-client-id'
+  );
+
+  // Log a warning if Auth0 is not properly configured
+  if (!hasValidAuth0Config) {
+    console.warn('Auth0 configuration missing or using placeholders. Authentication will be disabled.');
   }
 
   const onRedirectCallback = (appState) => {
@@ -29,6 +35,7 @@ const Auth0ProviderWithHistory = ({ children }) => {
     console.error('Auth error:', error);
   };
 
+  // Always render the Auth0Provider to avoid React Hook conditional rendering issues
   return (
     <Auth0Provider
       domain={domain}
@@ -42,6 +49,7 @@ const Auth0ProviderWithHistory = ({ children }) => {
       cacheLocation="localstorage"
       onRedirectCallback={onRedirectCallback}
       onError={onError}
+      skipRedirectCallback={!hasValidAuth0Config}
     >
       {children}
     </Auth0Provider>

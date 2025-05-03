@@ -9,6 +9,9 @@ const hasAuth0Config = !!(
 
 // Custom hook to check if user is authenticated
 export const useAuthentication = () => {
+  // Always call useAuth0 at the top level regardless of config availability
+  const auth0 = useAuth0();
+  
   // If Auth0 is not configured, provide mock implementation
   if (!hasAuth0Config) {
     return {
@@ -30,7 +33,7 @@ export const useAuthentication = () => {
     loginWithRedirect,
     loginWithPopup,
     logout,
-  } = useAuth0();
+  } = auth0;
 
   return {
     isAuthenticated,
@@ -45,6 +48,9 @@ export const useAuthentication = () => {
 
 // Hook to get access token
 export const useAccessToken = () => {
+  // Always call useAuth0 at the top level
+  const auth0 = useAuth0();
+  
   // If Auth0 is not configured, provide mock implementation
   if (!hasAuth0Config) {
     return {
@@ -53,7 +59,7 @@ export const useAccessToken = () => {
     };
   }
   
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated } = auth0;
   
   const getToken = async () => {
     if (!isAuthenticated) return null;
