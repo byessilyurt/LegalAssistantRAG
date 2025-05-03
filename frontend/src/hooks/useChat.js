@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useAuthentication, useAccessToken } from '../auth/auth-hooks';
 import chatApi from '../api/chatApi';
 
-const API_URL = 'https://pl-foreigners-legal-api-687968958844.us-central1.run.app';
-
 export const useChat = () => {
   const { isAuthenticated } = useAuthentication();
   const { getToken } = useAccessToken();
@@ -113,6 +111,10 @@ export const useChat = () => {
       // Send message using chatApi
       const data = await chatApi.sendMessage(userMessage.content, conversationId);
       
+      if (!data || !data.message) {
+        throw new Error('Invalid response from server');
+      }
+      
       // Add sources to the message object
       const assistantMessage = {
         ...data.message,
@@ -138,7 +140,7 @@ export const useChat = () => {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error:', error);
-      setError(error.message || 'Sorry, there was an error processing your message.');
+      setError(error.message || 'Sorry, there was an error connecting to the backend service. Please try again later.');
     } finally {
       setLoading(false);
     }

@@ -9,10 +9,11 @@ const audience = process.env.REACT_APP_AUTH0_AUDIENCE;
 const Auth0ProviderWithHistory = ({ children }) => {
   const redirectUri = window.location.origin;
 
+  // For local development or if environment variables are missing, continue without auth
   if (!domain || !clientId) {
-    return <div className="loading-auth">
-      <p>Auth0 configuration missing. Please set REACT_APP_AUTH0_DOMAIN and REACT_APP_AUTH0_CLIENT_ID environment variables.</p>
-    </div>;
+    console.warn('Auth0 configuration missing. Authentication will be disabled.');
+    // Instead of blocking the app, just render the children without auth
+    return children;
   }
 
   const onRedirectCallback = (appState) => {

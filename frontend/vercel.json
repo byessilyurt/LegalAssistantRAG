@@ -10,5 +10,8 @@
             "CI": "false"
         }
     },
-    "framework": "create-react-app"
+    "framework": "create-react-app",
+    "env": {
+        "REACT_APP_API_BASE_URL": "https://pl-foreigners-legal-api-687968958844.us-central1.run.app"
+    }
 }

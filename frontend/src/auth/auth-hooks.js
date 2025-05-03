@@ -1,8 +1,27 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect } from 'react';
 
+// Check if Auth0 configuration is available
+const hasAuth0Config = !!(
+  process.env.REACT_APP_AUTH0_DOMAIN && 
+  process.env.REACT_APP_AUTH0_CLIENT_ID
+);
+
 // Custom hook to check if user is authenticated
 export const useAuthentication = () => {
+  // If Auth0 is not configured, provide mock implementation
+  if (!hasAuth0Config) {
+    return {
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      getAccessTokenSilently: async () => null,
+      login: () => console.warn('Auth0 not configured'),
+      loginWithPopup: () => console.warn('Auth0 not configured'),
+      logout: () => console.warn('Auth0 not configured'),
+    };
+  }
+  
   const {
     isAuthenticated,
     isLoading,
@@ -26,6 +45,14 @@ export const useAuthentication = () => {
 
 // Hook to get access token
 export const useAccessToken = () => {
+  // If Auth0 is not configured, provide mock implementation
+  if (!hasAuth0Config) {
+    return {
+      getToken: async () => null,
+      isAuthenticated: false
+    };
+  }
+  
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   
   const getToken = async () => {
